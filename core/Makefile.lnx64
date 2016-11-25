@@ -1,0 +1,21 @@
+TARGET  := rtm-gwas
+HOST    := lnx64
+
+CC       := gcc
+CXX      := g++
+CFLAGS   := -O2 -Wall -DNDEBUG
+CXXFLAGS := -O2 -Wall -DNDEBUG -std=c++11 -fopenmp
+LDFLAGS  := -s -static -Ldeps/Rmath-$(HOST) -Ldeps/OpenBLAS-$(HOST)
+LDLIBS   := -lRmath -lopenblas -lgfortran -lquadmath -lgomp
+
+OBJECTS := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp)) src/zeroin.o
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+clean:
+	$(RM) $(OBJECTS) $(TARGET)*
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
