@@ -89,7 +89,7 @@ int AppLDB::run(int argc, char *argv[])
     cmd->add("--hmp", "HapMap file", "");
     cmd->add("--geno", "genotype file", "");
     cmd->add("--block", "predefined block file", "");
-    cmd->add("--out", "output file", "appldb");
+    cmd->add("--out", "output file", "appldb.out");
     cmd->add("--mhf", "minimum minor haplotype frequency", "0.01");
     cmd->add("--maxlen", "maximum length of blocks", "200000");
 
@@ -152,6 +152,9 @@ int AppLDB::perform()
     auto gt = std::make_shared<Genotype>();
     vector<bool> inblock(m, false);
 
+    m_length.resize(nb);
+    m_size.resize(nb);
+
     for (size_t i = 0; i < nchr; ++i) {
         auto ldb = std::make_shared<Genotype>();
         for (size_t k = 0; k < nb; ++k) {
@@ -164,9 +167,11 @@ int AppLDB::perform()
                 inblock[j] = true;
                 snps.push_back(j);
             }
+            m_length[k] = m_stop[k] - m_start[k];
+            m_size[k] = snps.size();
             if ( snps.empty() ) {
-                std::cerr << "WARNING: there is no SNPs within block: "
-                          << chrid[i] << " " << m_start[k] << " " << m_stop[k] << "\n";
+                std::cerr << "WARNING: no SNPs were found in genomic block: " << chrid[i] << " "
+                          << m_start[k] << " " << m_stop[k] << "\n";
                 continue;
             }
             make_snpldb(snps, *ldb);
@@ -196,14 +201,55 @@ int AppLDB::perform()
         }
     }
 
+    save_block_info();
+
     gt->ind = m_gt.ind;
     gt->ploidy = m_gt.ploidy;
+
+    recode_save_allele(*gt);
 
     int info = write_vcf(*gt, m_par.out + ".vcf");
     if (info != 0)
         return 1;
 
     return 0;
+}
+
+void AppLDB::save_block_info() const
+{
+    std::ofstream ofs(m_par.out + ".block");
+
+    if ( ! ofs ) {
+        std::cerr << "ERROR: can't open file for writing: " << m_par.out << ".block\n";
+        return;
+    }
+
+    auto n = m_chrid.size();
+    ofs << "Chromosome\tStart\tStop\tLength\tSNPs\n";
+    for (size_t i = 0; i < n; ++i) {
+        ofs << m_chrid[i] << "\t" << m_start[i] << "\t" << m_stop[i] << "\t"
+            << m_length[i] << "\t" << m_size[i] << "\n";
+    }
+}
+
+void AppLDB::recode_save_allele(Genotype &gt) const
+{
+    std::ofstream ofs(m_par.out + ".allele");
+
+    if ( ! ofs )
+        std::cerr << "ERROR: can't open file for writing: " << m_par.out << ".allele\n";
+    else
+        ofs << "Locus\tCode\tAllele\n";
+
+    auto m = gt.loc.size();
+    for (size_t i = 0; i < m; ++i) {
+        auto n = gt.allele[i].size();
+        for (size_t j = 0; j < n; ++j) {
+            if ( ofs )
+                ofs << gt.loc[i] << "\t" << j+1 << "\t" << gt.allele[i][j] << "\n";
+            gt.allele[i][j] = std::to_string(j+1);
+        }
+    }
 }
 
 void AppLDB::load_genotype()

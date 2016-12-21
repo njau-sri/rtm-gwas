@@ -11,6 +11,10 @@ public:
 private:
     int perform();
 
+    void save_block_info() const;
+
+    void recode_save_allele(Genotype &gt) const;
+
     void load_genotype();
 
     void load_block();
@@ -49,6 +53,8 @@ private:
     vector<string> m_chrid;
     vector<int> m_start;
     vector<int> m_stop;
+    vector<int> m_length;
+    vector<int> m_size;
 };
 
 #endif // APPLDB_H
