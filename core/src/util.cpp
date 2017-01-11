@@ -8,6 +8,8 @@ int number(const string &s, bool *ok)
     int a = 0;
     size_t p = 0;
 
+    if ( ok ) *ok = true;
+
     try {
         a = std::stoi(s, &p);
     }
@@ -22,8 +24,6 @@ int number(const string &s, bool *ok)
         std::cerr << "ERROR: failed to convert string to INT: " << s << "\n";
     }
 
-    if ( ok ) *ok = true;
-
     return a;
 }
 
@@ -32,6 +32,8 @@ long number(const string &s, bool *ok)
 {
     long a = 0;
     size_t p = 0;
+
+    if ( ok ) *ok = true;
 
     try {
         a = std::stol(s, &p);
@@ -47,8 +49,6 @@ long number(const string &s, bool *ok)
         std::cerr << "ERROR: failed to convert string to LONG: " << s << "\n";
     }
 
-    if ( ok ) *ok = true;
-
     return a;
 }
 
@@ -57,6 +57,8 @@ long long number(const string &s, bool *ok)
 {
     long long a = 0;
     size_t p = 0;
+
+    if ( ok ) *ok = true;
 
     try {
         a = std::stoll(s, &p);
@@ -72,8 +74,6 @@ long long number(const string &s, bool *ok)
         std::cerr << "ERROR: failed to convert string to LONG LONG: " << s << "\n";
     }
 
-    if ( ok ) *ok = true;
-
     return a;
 }
 
@@ -82,6 +82,8 @@ double number(const string &s, bool *ok)
 {
     double a = 0.0;
     size_t p = 0;
+
+    if ( ok ) *ok = true;
 
     try {
         a = std::stod(s, &p);
@@ -96,8 +98,6 @@ double number(const string &s, bool *ok)
         a = std::numeric_limits<double>::quiet_NaN();
         std::cerr << "ERROR: failed to convert string to DOUBLE: " << s << "\n";
     }
-
-    if ( ok ) *ok = true;
 
     return a;
 }
