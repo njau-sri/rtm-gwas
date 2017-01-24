@@ -14,7 +14,7 @@
 #   INSTALL [Qt]        http://www.qt.io/
 #
 
-VER=v1.0
+VER=v1.1
 
 if [ $# -ne 1 ]; then
     echo "usage: $0 lnx64|osx64|win32|win64"

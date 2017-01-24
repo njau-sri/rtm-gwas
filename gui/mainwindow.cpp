@@ -137,7 +137,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About RTM-GWAS"),
         tr(
-    "<h3>RTM-GWAS v1.0 (Built on %1 at %2)</h3>"
+    "<h3>RTM-GWAS v1.1 (Built on %1 at %2)</h3>"
     "<p><a href=%3>%3</a></p>"
         ).arg(QLatin1String(__DATE__), QLatin1String(__TIME__),
               QLatin1String("https://github.com/njau-sri/rtm-gwas")));
