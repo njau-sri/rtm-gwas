@@ -34,7 +34,7 @@ int AppSum::run(int argc, char *argv[])
     cmd->add("--ped", "PLINK PED/MAP file prefix", "");
     cmd->add("--hmp", "HapMap file", "");
     cmd->add("--geno", "genotype file", "");
-    cmd->add("--out", "output file", "appsum");
+    cmd->add("--out", "output file", "appsum.out");
     cmd->add("--allele", "output allele statistics");
     cmd->add("--indiv", "output individual statistics");
 

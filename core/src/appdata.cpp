@@ -18,7 +18,7 @@ int AppData::run(int argc, char *argv[])
     cmd->add("--ped", "PLINK PED/MAP file prefix", "");
     cmd->add("--hmp", "HapMap file", "");
     cmd->add("--geno", "genotype file", "");
-    cmd->add("--out", "output file", "appdata");
+    cmd->add("--out", "output file", "appdata.out");
     cmd->add("--format", "output file format", "vcf");
     cmd->add("--loc", "include locus list file", "");
     cmd->add("--ind", "include individual list file", "");

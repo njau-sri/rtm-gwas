@@ -74,7 +74,7 @@ int AppAssoc::run(int argc, char *argv[])
     cmd->add("--pheno", "phenotype data file", "");
     cmd->add("--covar", "covariate data file", "");
     cmd->add("--kin", "kinship data file", "");
-    cmd->add("--out", "output file", "appassoc");
+    cmd->add("--out", "output file", "appassoc.out");
     cmd->add("--method", "association analysis method, RTM/LM/LMM", "RTM");
     cmd->add("--alpha", "RTM significance level", "0.05");
     cmd->add("--preselect", "RTM pre-selection threshold", "0.05");

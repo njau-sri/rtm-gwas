@@ -61,7 +61,7 @@ int AppGSC::run(int argc, char *argv[])
     cmd->add("--ped", "PLINK PED/MAP file prefix", "");
     cmd->add("--hmp", "HapMap file", "");
     cmd->add("--geno", "genotype data file", "");
-    cmd->add("--out", "output file prefix", "appgsc");
+    cmd->add("--out", "output file prefix", "appgsc.out");
     cmd->add("--top", "number of eigenvectors", "10");
 
     if (argc < 2) {
