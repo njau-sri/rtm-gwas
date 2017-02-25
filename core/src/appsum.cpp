@@ -124,7 +124,10 @@ void AppSum::calc_save_stats_locus() const
             ac_tot += e.second;
         }
 
-        ofs << m_gt.loc[j] << "\t" << m_gt.allele[j].size() << "\t"
+        if (ac.size() < 2)
+            ac_min = 0;
+
+        ofs << m_gt.loc[j] << "\t" << ac.size() << "\t"
             << ac_min << "\t" << (double) ac_min / ac_tot << "\t"
             << ac_max << "\t" << (double) ac_max / ac_tot << "\t"
             << ac_tot << "\t" << (double) ac_tot / n << "\n";
