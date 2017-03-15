@@ -13,45 +13,49 @@ const int NA = std::numeric_limits<int>::min();
 // ret < 0: error; ret > 0 : ploidy
 int parse_gt(const Token &t, int &a, int &b)
 {
-    string gt(t.data(), std::find(t.data(), t.data() + t.size(), ':'));
+    auto beg = t.data();
+    auto end = std::find(t.data(), t.data() + t.size(), ':');
+    size_t len = end - beg;
 
-    if ( gt.empty() )
+    if (len == 0)
         return -1;
 
-    if (gt == ".")
+    if (len == 1 && beg[0] == '.')
         return 1;
 
-    if (gt == "./." || gt == ".|.")
+    if (len == 3 && beg[0] == '.' && beg[2] == '.' && (beg[1] == '/' || beg[1] == '|'))
         return 2;
 
-    if (std::count(gt.begin(), gt.end(), '/') + std::count(gt.begin(), gt.end(), '|') > 1) {
-        std::cerr << "ERROR: unsuppored polyploidy genotype: " << gt << "\n";
+    if (std::count(beg, end, '/') + std::count(beg, end, '|') > 1) {
+        std::cerr << "ERROR: unsuppored polyploidy genotype: " << string(beg,end) << "\n";
         return -1;
     }
 
-    auto pos = gt.find_first_of("/|");
-    if (pos == 0 || pos == gt.size() - 1)
+    size_t pos = 0;
+    while (pos < len && beg[pos] != '/' && beg[pos] != '|')
+        ++pos;
+    if (pos == 0 || pos == len - 1)
         return -1;
 
     bool ok = false;
 
-    if (pos == string::npos) {
-        a = number<int>(gt, &ok);
+    if (pos == len) {
+        a = number<int>(string(beg,end), &ok);
         if ( ! ok || a < 0 )
             return -1;
         return 1;
     }
 
-    auto sa = gt.substr(0,pos);
-    if (sa != ".") {
-        a = number<int>(sa, &ok);
+    string gt(beg, beg + pos);
+    if (gt != ".") {
+        a = number<int>(gt, &ok);
         if ( ! ok || a < 0 )
             return -1;
     }
 
-    auto sb = gt.substr(pos+1);
-    if (sb != ".") {
-        b = number<int>(sb, &ok);
+    gt.assign(beg + pos + 1, end);
+    if (gt != ".") {
+        b = number<int>(gt, &ok);
         if ( ! ok || b < 0 )
             return -1;
     }
@@ -241,25 +245,31 @@ int write_vcf(const Genotype &gt, const string &filename, bool force_diploid)
     }
     ofs << "\n";
 
+    int p = std::numeric_limits<allele_t>::max() + 1;
+    vector<string> gs(p);
+    gs[0] = ".";
+    for (int i = 1; i < p; ++i)
+        gs[i] = std::to_string(i-1);
+
     string line;
 
     for (size_t j = 0; j < m; ++j) {
         line.clear();
 
-        line.append(gt.chr[j]).push_back('\t');
-        line.append(std::to_string(gt.pos[j])).push_back('\t');
-        line.append(gt.loc[j]).push_back('\t');
+        line.append(gt.chr[j]).append("\t");
+        line.append(std::to_string(gt.pos[j])).append("\t");
+        line.append(gt.loc[j]).append("\t");
 
         if ( ! gt.allele[j].empty() ) {
-            line.append(gt.allele[j][0]).push_back('\t');
+            line.append(gt.allele[j][0]).append("\t");
             auto na = gt.allele[j].size();
             if (na > 1) {
                 for (size_t k = 1; k < na; ++k)
-                    line.append(gt.allele[j][k]).push_back(',');
+                    line.append(gt.allele[j][k]).append(",");
                 line.pop_back();
             }
             else
-                line.push_back('.');
+                line.append(".");
         }
         else
             line.append(".\t.");
@@ -274,28 +284,17 @@ int write_vcf(const Genotype &gt, const string &filename, bool force_diploid)
         line.append("\tGT");
 
         if ( haploid ) {
-            if ( force_diploid ) {
-                for (size_t i = 0; i < n; ++i) {
-                    auto a = gt.dat[j][i];
-                    string as = a == 0 ? "." : std::to_string(a-1);
-                    line.append("\t").append(as).append("/").append(as);
-                }
-            }
-            else {
-                for (size_t i = 0; i < n; ++i) {
-                    auto a = gt.dat[j][i];
-                    line.push_back('\t');
-                    line.append(a == 0 ? "." : std::to_string(a-1));
-                }
+            for (size_t i = 0; i < n; ++i) {
+                auto a = gt.dat[j][i];
+                line.append("\t").append(gs[a]);
+                if ( force_diploid )
+                    line.append("/").append(gs[a]);
             }
         }
         else {
             for (size_t i = 0; i < n; ++i) {
                 auto a = gt.dat[j][i*2], b = gt.dat[j][i*2+1];
-                line.push_back('\t');
-                line.append(a == 0 ? "." : std::to_string(a-1));
-                line.push_back('/');
-                line.append(b == 0 ? "." : std::to_string(b-1));
+                line.append("\t").append(gs[a]).append("/").append(gs[b]);
             }
         }
 

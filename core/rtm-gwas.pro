@@ -6,8 +6,8 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -static
 
-LIBS += -L$$PWD/deps/OpenBLAS-win32 -lopenblas -lgfortran -lquadmath -lgomp
-LIBS += -L$$PWD/deps/Rmath-win32 -lRmath
+LIBS += -Le:/devel/deps/OpenBLAS-win32 -lopenblas -lgfortran -lquadmath -lgomp
+LIBS += -Le:/devel/deps/Rmath-win32 -lRmath
 
 SOURCES += \
     src/appassoc.cpp \
