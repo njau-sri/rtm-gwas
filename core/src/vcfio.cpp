@@ -52,7 +52,7 @@ int parse_gt(const Token &t, int &a, int &b)
     auto sb = gt.substr(pos+1);
     if (sb != ".") {
         b = number<int>(sb, &ok);
-        if ( ! ok || a < 0 )
+        if ( ! ok || b < 0 )
             return -1;
     }
 
