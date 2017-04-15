@@ -3,7 +3,7 @@
 VER=v1.1
 
 if [ $# -ne 1 ]; then
-    echo "usage: $0 lnx64|osx64|win32|win64"
+    echo "usage: $0 lnx64|win32|win64|osx64"
     exit 1
 fi
 
@@ -30,10 +30,20 @@ cp rtm-gwas* $TOP/build/rtm-gwas
 cd $TOP/gui
 make distclean
 if [ $1 == "lnx64" ]; then
-    qmake-qt4 -spec macx-g++
+    qmake-qt4
     make || exit 1
-	strip -s rtm-gwas-gui
+    strip -s rtm-gwas-gui
     cp rtm-gwas-gui $TOP/build/rtm-gwas
+elif [ $1 == "win32" ]; then
+    i686-w64-mingw32-qmake-qt4
+    make || exit 1
+    i686-w64-mingw32-strip -s release/rtm-gwas-gui.exe
+    cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
+elif [ $1 == "win64" ]; then
+    x86_64-w64-mingw32-qmake-qt4
+    make || exit 1
+    x86_64-w64-mingw32-strip -s release/rtm-gwas-gui.exe
+    cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
 elif [ $1 == "osx64" ]; then
     qmake-4.8 -spec macx-g++
     sed -i.bak 's/ -g -gdwarf-2 / -O2 /' Makefile
@@ -42,16 +52,6 @@ elif [ $1 == "osx64" ]; then
     mv $TOP/build/rtm-gwas/rtm-gwas rtm-gwas-gui.app/Contents/MacOS
     rmdir $TOP/build/rtm-gwas
     mv rtm-gwas-gui.app $TOP/build/rtm-gwas.app
-elif [ $1 == "win32" ]; then
-    i686-w64-mingw32-qmake-qt4
-    make || exit 1
-	i686-w64-mingw32-strip -s release/rtm-gwas-gui.exe
-    cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
-elif [ $1 == "win64" ]; then
-    x86_64-w64-mingw32-qmake-qt4
-    make || exit 1
-	x86_64-w64-mingw32-strip -s release/rtm-gwas-gui.exe
-    cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
 fi
 
 cd $TOP/build
