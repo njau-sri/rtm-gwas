@@ -1,16 +1,4 @@
 #!/bin/bash
-#
-# Fedora
-#   yum install gcc gcc-c++ gcc-gfortran glibc-static libstdc++-static libgfortran-static
-#   yum install mingw32-gcc mingw32-gcc-c++ mingw32-gcc-gfortran
-#   yum install mingw64-gcc mingw64-gcc-c++ mingw64-gcc-gfortran
-#   yum install mingw32-winpthreads-static mingw32-libgomp
-#   yum install mingw64-winpthreads-static mingw64-libgomp
-#
-# OS X
-#   xcode-select --install
-#   INSTALL [gfortran]  http://hpc.sourceforge.net/
-#
 
 VER=0.2.18
 

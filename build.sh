@@ -1,18 +1,4 @@
 #!/bin/bash
-#
-# Fedora
-#   yum install gcc gcc-c++ gcc-gfortran glibc-static libstdc++-static libgfortran-static
-#   yum install mingw32-gcc mingw32-gcc-c++ mingw32-gcc-gfortran
-#   yum install mingw64-gcc mingw64-gcc-c++ mingw64-gcc-gfortran
-#   yum install mingw32-winpthreads-static mingw32-libgomp
-#   yum install mingw64-winpthreads-static mingw64-libgomp
-#   yum install qt-devel mingw32-qt mingw64-qt
-#
-# OS X
-#   xcode-select --install
-#   INSTALL [gfortran]  http://hpc.sourceforge.net/
-#   INSTALL [Qt]        http://www.qt.io/
-#
 
 VER=v1.1
 
@@ -44,38 +30,28 @@ cp rtm-gwas* $TOP/build/rtm-gwas
 cd $TOP/gui
 make distclean
 if [ $1 == "lnx64" ]; then
-    qmake-qt4
-    sed -i.bak 's/ -g / -s /' Makefile
+    qmake-qt4 -spec macx-g++
     make || exit 1
+	strip -s rtm-gwas-gui
     cp rtm-gwas-gui $TOP/build/rtm-gwas
 elif [ $1 == "osx64" ]; then
     qmake-4.8 -spec macx-g++
-    sed -i.bak 's/ -g -gdwarf-2 / /' Makefile
+    sed -i.bak 's/ -g -gdwarf-2 / -O2 /' Makefile
     make || exit 1
-    macdeployqt rtm-gwas-gui.app
+    macdeployqt-4.8 rtm-gwas-gui.app
     mv $TOP/build/rtm-gwas/rtm-gwas rtm-gwas-gui.app/Contents/MacOS
     rmdir $TOP/build/rtm-gwas
     mv rtm-gwas-gui.app $TOP/build/rtm-gwas.app
 elif [ $1 == "win32" ]; then
-    mingw32-qmake-qt4
-    sed -i.bak 's/ -g / -s /' Makefile.Release
+    i686-w64-mingw32-qmake-qt4
     make || exit 1
+	i686-w64-mingw32-strip -s release/rtm-gwas-gui.exe
     cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
-    DEPS=("libgcc_s_sjlj-1" "libpng16-16" "libstdc++-6" "libwinpthread-1" "QtCore4" "QtGui4" "zlib1")
-    for i in ${DEPS[@]}
-    do
-        cp /usr/i686-w64-mingw32/sys-root/mingw/bin/$i.dll $TOP/build/rtm-gwas
-    done
 elif [ $1 == "win64" ]; then
-    mingw64-qmake-qt4
-    sed -i.bak 's/ -g / -s /' Makefile.Release
+    x86_64-w64-mingw32-qmake-qt4
     make || exit 1
+	x86_64-w64-mingw32-strip -s release/rtm-gwas-gui.exe
     cp release/rtm-gwas-gui.exe $TOP/build/rtm-gwas
-    DEPS=("libgcc_s_seh-1" "libpng16-16" "libstdc++-6" "libwinpthread-1" "QtCore4" "QtGui4" "zlib1")
-    for i in ${DEPS[@]}
-    do
-        cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/$i.dll $TOP/build/rtm-gwas
-    done
 fi
 
 cd $TOP/build

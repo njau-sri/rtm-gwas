@@ -1,19 +1,4 @@
 #!/bin/bash
-#
-# Fedora
-#   yum install gcc gcc-c++ gcc-gfortran glibc-static libstdc++-static libgfortran-static
-#   yum install mingw32-gcc mingw32-gcc-c++ mingw32-gcc-gfortran
-#   yum install mingw64-gcc mingw64-gcc-c++ mingw64-gcc-gfortran
-#   yum install mingw32-winpthreads-static mingw32-libgomp
-#   yum install mingw64-winpthreads-static mingw64-libgomp
-#   yum install bzip2-devel xz-devel pcre-devel libcurl-devel
-#
-# OS X
-#   xcode-select --install
-#   INSTALL [gfortran]  http://hpc.sourceforge.net/
-#   INSTALL [liblzma]   http://tukaani.org/xz/
-#   INSTALL [pcre]      http://www.pcre.org/      --enable-utf
-#
 
 VER=3.3.0
 
