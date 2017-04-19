@@ -388,10 +388,17 @@ void AppLDB::make_snpldb(const vector<size_t> &snps, Genotype &gt) const
 
     vector<string> allele;
     for (int i = 0; i < na; ++i) {
-        string s;
-        for (size_t j = 0; j < snps.size(); ++j)
-            s.append(m_gt.allele[snps[j]][haps[i][j]-1]);
-        allele.push_back(s);
+        string si;
+        auto p = snps.size();
+        for (size_t j = 0; j < p; ++j) {
+            auto jj = snps[j];
+            auto a = haps[i][j];
+            if ( a )
+                si.append(m_gt.allele[jj][a-1]);
+            else
+                si.push_back('N');
+        }
+        allele.push_back(si);
     }
     gt.allele.push_back(allele);
 }
