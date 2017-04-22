@@ -21,17 +21,18 @@ SOURCES += \
     src/cmdline.cpp \
     src/emma.cpp \
     src/glm.cpp \
-    src/hapmapio.cpp \
     src/lapack.cpp \
     src/lstsqr.cpp \
     src/main.cpp \
-    src/plinkio.cpp \
-    src/rtmio.cpp \
     src/stat.cpp \
     src/stepreg.cpp \
     src/util.cpp \
-    src/vcfio.cpp \
-    src/zeroin.c
+    src/zeroin.c \
+    src/number.cpp \
+    src/vcf.cpp \
+    src/data.cpp \
+    src/hapmap.cpp \
+    src/plink.cpp
 
 HEADERS += \
     src/appassoc.h \
@@ -46,14 +47,15 @@ HEADERS += \
     src/emma.h \
     src/glm.h \
     src/haploprob.h \
-    src/hapmapio.h \
     src/lapack.h \
     src/lstsqr.h \
     src/main.h \
-    src/plinkio.h \
-    src/rtmio.h \
     src/stat.h \
     src/stepreg.h \
-    src/strsplit.h \
     src/util.h \
-    src/vcfio.h
+    src/number.h \
+    src/split.h \
+    src/vcf.h \
+    src/data.h \
+    src/hapmap.h \
+    src/plink.h

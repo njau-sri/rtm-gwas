@@ -7,12 +7,13 @@
 #include "appldb.h"
 #include "cmdline.h"
 #include "util.h"
-#include "strsplit.h"
+#include "number.h"
+#include "split.h"
 #include "haploprob.h"
-#include "vcfio.h"
-#include "plinkio.h"
-#include "hapmapio.h"
-#include "rtmio.h"
+#include "vcf.h"
+#include "plink.h"
+#include "hapmap.h"
+#include "data.h"
 
 namespace {
 
@@ -52,7 +53,7 @@ int read_block(const string &filename, vector<string> &chr, vector<int> &pos)
         ++ln;
 
         vector<string> vs;
-        strsplit(delim, line.begin(), line.end(), vs);
+        split(delim, line.begin(), line.end(), vs);
         if (vs.empty())
             continue;
 

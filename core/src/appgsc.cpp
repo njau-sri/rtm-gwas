@@ -3,12 +3,13 @@
 #include <utility>
 #include "appgsc.h"
 #include "cmdline.h"
-#include "plinkio.h"
-#include "hapmapio.h"
-#include "vcfio.h"
-#include "rtmio.h"
+#include "plink.h"
+#include "hapmap.h"
+#include "vcf.h"
+#include "data.h"
 #include "lapack.h"
 #include "util.h"
+#include "number.h"
 #include "stat.h"
 
 namespace {

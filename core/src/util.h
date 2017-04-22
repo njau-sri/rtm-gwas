@@ -6,9 +6,6 @@
 #include <algorithm>
 #include "main.h"
 
-template<typename T>
-T number(const string &s, bool *ok = nullptr);
-
 template<typename T1, typename T2>
 bool contain(const vector<T1> &v, const T2 &a)
 {

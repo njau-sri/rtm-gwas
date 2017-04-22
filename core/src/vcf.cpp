@@ -2,29 +2,75 @@
 #include <limits>
 #include <fstream>
 #include <iostream>
-#include "vcfio.h"
-#include "strsplit.h"
-#include "util.h"
+#include <algorithm>
+#include "vcf.h"
+#include "split.h"
+#include "number.h"
 
 namespace {
 
-const int NA = std::numeric_limits<int>::min();
+int parse_vcf_header(const string &str, vector<string> &ind)
+{
+    vector<string> vs;
+    split([](char c) { return c == ' ' || c == '\t'; }, str.begin(), str.end(), vs);
 
-// ret < 0: error; ret > 0 : ploidy
-int parse_gt(const Token &t, int &a, int &b)
+    if (vs.size() != 8 && vs.size() < 10) {
+        std::cerr << "ERROR: incorrect number of columns in header line: " << vs.size() << "\n";
+        return 1;
+    }
+
+    if (vs[0] != "#CHROM" || vs[1] != "POS" || vs[2] != "ID" || vs[3] != "REF" ||
+        vs[4] != "ALT" || vs[5] != "QUAL" || vs[6] != "FILTER" || vs[7] != "INFO") {
+        std::cerr << "ERROR: incorrect column names in header line: "
+                  << vs[0] << "\t" << vs[1] << "\t" << vs[2] << "\t" << vs[3] << "\t"
+                  << vs[4] << "\t" << vs[5] << "\t" << vs[6] << "\t" << vs[7] << "\n";
+        return 1;
+    }
+
+    if (vs.size() > 9) {
+        if (vs[8] != "FORMAT") {
+            std::cerr << "ERROR: FORMAT is required at 9th field in header line: " << vs[8] << "\n";
+            return 1;
+        }
+        ind.assign(vs.begin() + 9, vs.end());
+    }
+
+    return 0;
+}
+
+int parse_vcf_gt(const Token &t, int &a, int &b)
 {
     auto beg = t.data();
     auto end = std::find(t.data(), t.data() + t.size(), ':');
     size_t len = end - beg;
 
+    a = b = -9;
+
     if (len == 0)
         return -1;
 
-    if (len == 1 && beg[0] == '.')
-        return 1;
+    if (len == 1) {
+        if (*beg == '.')
+            return 1;
+        a = *beg - '0';
+        return a < 0 || a > 9 ? -1 : 1;
+    }
 
-    if (len == 3 && beg[0] == '.' && beg[2] == '.' && (beg[1] == '/' || beg[1] == '|'))
+    if (len == 3 && (beg[1] == '/' || beg[1] == '|')) {
+        if (beg[0] != '.') {
+            a = beg[0] - '0';
+            if (a < 0 || a > 9)
+                return -1;
+        }
+
+        if (beg[2] != '.') {
+            b = beg[2] - '0';
+            if (b < 0 || b > 9)
+                return -1;
+        }
+
         return 2;
+    }
 
     if (std::count(beg, end, '/') + std::count(beg, end, '|') > 1) {
         std::cerr << "ERROR: unsuppored polyploidy genotype: " << string(beg,end) << "\n";
@@ -41,9 +87,7 @@ int parse_gt(const Token &t, int &a, int &b)
 
     if (pos == len) {
         a = number<int>(string(beg,end), &ok);
-        if ( ! ok || a < 0 )
-            return -1;
-        return 1;
+        return ! ok || a < 0 ? -1 : 1;
     }
 
     string gt(beg, beg + pos);
@@ -76,23 +120,23 @@ string datetime_now()
 int read_vcf(const string &filename, Genotype &gt)
 {
     std::ifstream ifs(filename);
+
     if ( ! ifs ) {
         std::cerr << "ERROR: can't open file for reading: " << filename << "\n";
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
-
-    size_t ln = 0;
+    size_t ln = 1;
     string ver;
 
-    for (string line; std::getline(ifs,line); ) {
-        ++ln;
+    for (string line; std::getline(ifs,line); ++ln) {
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         if (ln == 1 && line.compare(0,13,"##fileformat=") == 0) {
             ver = line.substr(13);
             if (ver != "VCFv4.0" && ver != "VCFv4.1" && ver != "VCFv4.2") {
-                std::cerr << "ERROR: unsupported VCF format version: " << ver << "\n";
+                std::cerr << "ERROR: unsupported VCF file version: " << line << "\n";
                 return 1;
             }
         }
@@ -113,30 +157,8 @@ int read_vcf(const string &filename, Genotype &gt)
             continue;
 
         if (line.compare(0,1,"#") == 0) {
-            vector<string> vs;
-            strsplit(delim, line.begin(), line.end(), vs);
-
-            if (vs.size() != 8 && vs.size() < 10) {
-                std::cerr << "ERROR: incorrect number of columns in header line: " << vs.size() << "\n";
+            if ( parse_vcf_header(line, gt.ind) )
                 return 1;
-            }
-
-            if (vs[0] != "#CHROM" || vs[1] != "POS" || vs[2] != "ID" || vs[3] != "REF" ||
-                vs[4] != "ALT" || vs[5] != "QUAL" || vs[6] != "FILTER" || vs[7] != "INFO") {
-                std::cerr << "ERROR: incorrect column names in header line: "
-                          << vs[0] << "\t" << vs[1] << "\t" << vs[2] << "\t" << vs[3] << "\t"
-                          << vs[4] << "\t" << vs[5] << "\t" << vs[6] << "\t" << vs[7] << "\n";
-                return 1;
-            }
-
-            if (vs.size() > 9) {
-                if (vs[8] != "FORMAT") {
-                    std::cerr << "ERROR: FORMAT is required at 9th field in header line: " << vs[8] << "\n";
-                    return 1;
-                }
-                gt.ind.assign(vs.begin() + 9, vs.end());
-            }
-
             break;
         }
 
@@ -144,23 +166,21 @@ int read_vcf(const string &filename, Genotype &gt)
         return 1;
     }
 
-    if ( ver.empty() ) {
-        std::cerr << "ERROR: ##fileformat field is required and must be the first line\n";
-        return 1;
-    }
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     int ploidy = -1;
     size_t ncols = gt.ind.empty() ? 8 : gt.ind.size() + 9;
 
-    for (string line; std::getline(ifs,line); ) {
-        ++ln;
+    for (string line; std::getline(ifs,line); ++ln) {
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<Token> vt;
-        strsplit(delim, line.begin(), line.end(), vt);
+        split(delim, line.begin(), line.end(), vt);
 
         if (vt.size() != ncols) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vt.size() << " != "
-                      << ncols << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vt.size() << " != " << ncols << "): " << filename << "\n";
             return 1;
         }
 
@@ -177,7 +197,8 @@ int read_vcf(const string &filename, Genotype &gt)
 
         auto format = string(vt[8]);
         if (format.compare(0,2,"GT") != 0) {
-            std::cerr << "ERROR: GT is required and must be the first sub-field of FORMAT: " << format << "\n";
+            std::cerr << "ERROR: GT is required and must be the first sub-field of FORMAT: "
+                      << format << "\n";
             return 1;
         }
 
@@ -188,15 +209,15 @@ int read_vcf(const string &filename, Genotype &gt)
 
         vector<string> as;
         as.push_back(ref);
-        strsplit([](char c) { return c == ','; }, alt.begin(), alt.end(), as);
+        split([](char c) { return c == ','; }, alt.begin(), alt.end(), as);
         gt.allele.push_back(as);
-        int nas = as.size();
+        int na = as.size();
 
         vector<allele_t> v;
         for (size_t i = 9; i < ncols; ++i) {
-            int a = NA, b = NA;
-            int info = parse_gt(vt[i], a, b);
-            if (info < 0 || a >= nas || b >= nas) {
+            int a = -9, b = -9;
+            int info = parse_vcf_gt(vt[i], a, b);
+            if (info < 0 || a >= na || b >= na) {
                 std::cerr << "ERROR: invalid genotype data: " << string(vt[i]) << "\n";
                 return 1;
             }
@@ -205,13 +226,14 @@ int read_vcf(const string &filename, Genotype &gt)
                 ploidy = info;
 
             if (info != ploidy) {
-                std::cerr << "ERROR: inconsistent ploidy (" << ploidy << ") genotype: " << string(vt[i]) << "\n";
+                std::cerr << "ERROR: inconsistent ploidy (" << ploidy
+                          << ") genotype: " << string(vt[i]) << "\n";
                 return 1;
             }
 
-            v.push_back(a == NA ? 0 : a + 1);
+            v.push_back(a < 0 ? 0 : a + 1);
             if (ploidy == 2)
-                v.push_back(b == NA ? 0 : b + 1);
+                v.push_back(b < 0 ? 0 : b + 1);
         }
 
         gt.dat.push_back(v);
@@ -223,9 +245,10 @@ int read_vcf(const string &filename, Genotype &gt)
     return 0;
 }
 
-int write_vcf(const Genotype &gt, const string &filename, bool force_diploid)
+int write_vcf(const Genotype &gt, const string &filename, bool diploid)
 {
     std::ofstream ofs(filename);
+
     if ( ! ofs ) {
         std::cerr << "ERROR: can't open file for writing: " << filename << "\n";
         return 1;
@@ -287,7 +310,7 @@ int write_vcf(const Genotype &gt, const string &filename, bool force_diploid)
             for (size_t i = 0; i < n; ++i) {
                 auto a = gt.dat[j][i];
                 line.append("\t").append(gs[a]);
-                if ( force_diploid )
+                if ( diploid )
                     line.append("/").append(gs[a]);
             }
         }

@@ -1,8 +1,9 @@
 #include <fstream>
 #include <iostream>
-#include "plinkio.h"
-#include "strsplit.h"
+#include "plink.h"
+#include "split.h"
 #include "util.h"
+#include "number.h"
 
 // PLINK, http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml
 
@@ -24,7 +25,7 @@ int read_plink_map(const string &filename, Genotype &gt)
         ++ln;
 
         vector<string> vs;
-        strsplit(delim, line.begin(), line.end(), vs);
+        split(delim, line.begin(), line.end(), vs);
         if ( vs.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -62,7 +63,7 @@ int read_plink_ped(const string &filename, Genotype &gt)
         ++ln;
 
         vector<Token> vt;
-        strsplit(delim, line.begin(), line.end(), vt);
+        split(delim, line.begin(), line.end(), vt);
         if ( vt.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;

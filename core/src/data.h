@@ -1,5 +1,5 @@
-#ifndef RTMIO_H
-#define RTMIO_H
+#ifndef DATA_H
+#define DATA_H
 
 #include "main.h"
 
@@ -19,4 +19,4 @@ int read_square(const string &filename, SquareData &sd);
 
 int write_square(const SquareData &sd, const string &filename);
 
-#endif // RTMIO_H
+#endif // DATA_H

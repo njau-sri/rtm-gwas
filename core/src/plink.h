@@ -1,5 +1,5 @@
-#ifndef PLINKIO_H
-#define PLINKIO_H
+#ifndef PLINK_H
+#define PLINK_H
 
 #include "main.h"
 
@@ -9,4 +9,4 @@ int read_plink(const string &prefix, Genotype &gt);
 
 int write_plink(const Genotype &gt, const string &prefix);
 
-#endif // PLINKIO_H
+#endif // PLINK_H

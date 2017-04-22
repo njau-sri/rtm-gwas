@@ -1,8 +1,9 @@
 #include <fstream>
 #include <iostream>
-#include "rtmio.h"
-#include "strsplit.h"
+#include "data.h"
+#include "split.h"
 #include "util.h"
+#include "number.h"
 
 namespace {
 
@@ -104,7 +105,7 @@ int read_genotype_char(const string &filename, Genotype &gt)
         ++ln;
 
         vector<string> vs;
-        strsplit([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
+        split([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
         if ( vs.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -129,7 +130,7 @@ int read_genotype_char(const string &filename, Genotype &gt)
         ++ln;
 
         vector<Token> vt;
-        strsplit(delim, line.begin(), line.end(), vt);
+        split(delim, line.begin(), line.end(), vt);
         if ( vt.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -216,7 +217,7 @@ int read_genotype_string(const string &filename, Genotype &gt)
         ++ln;
 
         vector<string> vs;
-        strsplit([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
+        split([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
         if ( vs.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -242,7 +243,7 @@ int read_genotype_string(const string &filename, Genotype &gt)
         ++ln;
 
         vector<Token> vt;
-        strsplit(delim, line.begin(), line.end(), vt);
+        split(delim, line.begin(), line.end(), vt);
         if ( vt.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -414,7 +415,7 @@ int read_phenotype(const string &filename, Phenotype &pt)
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
-        strsplit(delim, line.begin(), line.end(), colnames);
+        split(delim, line.begin(), line.end(), colnames);
         if ( ! colnames.empty() )
             break;
         std::cerr << "WARN: skipping empty line: " << ln << "\n";
@@ -441,7 +442,7 @@ int read_phenotype(const string &filename, Phenotype &pt)
         ++ln;
 
         vector<string> vs;
-        strsplit(delim, line.begin(), line.end(), vs);
+        split(delim, line.begin(), line.end(), vs);
         if ( vs.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;
@@ -528,7 +529,7 @@ int read_square(const string &filename, SquareData &sd)
         ++ln;
 
         vector<string> vs;
-        strsplit(delim, line.begin(), line.end(), vs);
+        split(delim, line.begin(), line.end(), vs);
         if ( vs.empty() ) {
             std::cerr << "WARN: skipping empty line: " << ln << "\n";
             continue;

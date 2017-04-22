@@ -4,10 +4,10 @@
 #include <iostream>
 #include "appsum.h"
 #include "cmdline.h"
-#include "vcfio.h"
-#include "plinkio.h"
-#include "hapmapio.h"
-#include "rtmio.h"
+#include "vcf.h"
+#include "plink.h"
+#include "hapmap.h"
+#include "data.h"
 
 namespace {
 
