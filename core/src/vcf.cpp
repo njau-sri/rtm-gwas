@@ -120,16 +120,16 @@ string datetime_now()
 int read_vcf(const string &filename, Genotype &gt)
 {
     std::ifstream ifs(filename);
-
     if ( ! ifs ) {
         std::cerr << "ERROR: can't open file for reading: " << filename << "\n";
         return 1;
     }
 
-    size_t ln = 1;
     string ver;
 
-    for (string line; std::getline(ifs,line); ++ln) {
+    size_t ln = 0;
+    for (string line; std::getline(ifs,line); ) {
+        ++ln;
         if ( ! line.empty() && line.back() == '\r' )
             line.pop_back();
 
@@ -171,7 +171,8 @@ int read_vcf(const string &filename, Genotype &gt)
     int ploidy = -1;
     size_t ncols = gt.ind.empty() ? 8 : gt.ind.size() + 9;
 
-    for (string line; std::getline(ifs,line); ++ln) {
+    for (string line; std::getline(ifs,line); ) {
+        ++ln;
         if ( ! line.empty() && line.back() == '\r' )
             line.pop_back();
 
@@ -248,7 +249,6 @@ int read_vcf(const string &filename, Genotype &gt)
 int write_vcf(const Genotype &gt, const string &filename, bool diploid)
 {
     std::ofstream ofs(filename);
-
     if ( ! ofs ) {
         std::cerr << "ERROR: can't open file for writing: " << filename << "\n";
         return 1;

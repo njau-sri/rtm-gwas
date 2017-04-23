@@ -17,19 +17,18 @@ int read_plink_map(const string &filename, Genotype &gt)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     size_t ln = 0;
-
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
         split(delim, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vs.empty() )
             continue;
-        }
 
         if (vs.size() != 4) {
             std::cerr << "ERROR: expected 4 columns at line " << ln << ": " << filename << "\n";
@@ -53,25 +52,25 @@ int read_plink_ped(const string &filename, Genotype &gt)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
-    size_t ln = 0;
     auto m = gt.loc.size();
     vector< vector<allele_t> > dat;
 
+    size_t ln = 0;
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<Token> vt;
         split(delim, line.begin(), line.end(), vt);
-        if ( vt.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vt.empty() )
             continue;
-        }
 
         if (vt.size() != 6 + 2*m) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vt.size() << " != "
-                      << 6 + 2*m << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vt.size() << " != " << 6 + 2*m << "): " << filename << "\n";
             return 1;
         }
 
@@ -119,7 +118,6 @@ int read_plink_ped(const string &filename, Genotype &gt)
     }
 
     gt.ploidy = 2;
-
     return 0;
 }
 

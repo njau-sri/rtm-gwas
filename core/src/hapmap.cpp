@@ -29,27 +29,26 @@ int read_hapmap(const string &filename, Genotype &gt)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     size_t ln = 0;
-
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
         split(delim, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vs.empty() )
             continue;
-        }
 
         if (vs.size() < 11) {
-            std::cerr << "ERROR: expected at least 11 columns at line " << ln << ": " << filename << "\n";
+            std::cerr << "ERROR: expected at least 11 columns at line "
+                      << ln << ": " << filename << "\n";
             return 1;
         }
 
         gt.ind.assign(vs.begin() + 11, vs.end());
-
         break;
     }
 
@@ -58,17 +57,17 @@ int read_hapmap(const string &filename, Genotype &gt)
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<Token> vt;
         split(delim, line.begin(), line.end(), vt);
-        if ( vt.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vt.empty() )
             continue;
-        }
 
         if (vt.size() != 11 + n) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vt.size() << " != "
-                      << 11 + n << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vt.size() << " != " << 11 + n << "): " << filename << "\n";
             return 1;
         }
 
@@ -159,7 +158,8 @@ int write_hapmap(const Genotype &gt, const string &filename)
         else if ( allele.empty() )
             allele.append("N/N");
 
-        ofs << gt.loc[j] << " " << allele.substr(0,3) << " " << gt.chr[j] << " " << gt.pos[j] << " " << line << "\n";
+        ofs << gt.loc[j] << " " << allele.substr(0,3) << " " << gt.chr[j] << " "
+            << gt.pos[j] << " " << line << "\n";
     }
 
     return 0;

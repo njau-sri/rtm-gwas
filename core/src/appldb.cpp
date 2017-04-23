@@ -45,12 +45,13 @@ int read_block(const string &filename, vector<string> &chr, vector<int> &pos)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     size_t ln = 0;
-
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
         split(delim, line.begin(), line.end(), vs);

@@ -100,41 +100,40 @@ int read_genotype_char(const string &filename, Genotype &gt)
     }
 
     size_t ln = 0;
-
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
-        split([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        split([](char c) { return c == ' ' || c == '\t'; }, line.begin(), line.end(), vs);
+        if ( vs.empty() )
             continue;
-        }
 
         if (vs.size() < 4) {
-            std::cerr << "ERROR: expected at least 4 columns at line " << ln << ": " << filename << "\n";
+            std::cerr << "ERROR: expected at least 4 columns at line "
+                      << ln << ": " << filename << "\n";
             return 1;
         }
 
         gt.ind.assign(vs.begin() + 4, vs.end());
-
         break;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' ||  c == ':' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t' ||  c == '/'; };
 
     size_t ploidy = 0;
     auto n = gt.ind.size();
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<Token> vt;
         split(delim, line.begin(), line.end(), vt);
-        if ( vt.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vt.empty() )
             continue;
-        }
 
         if (ploidy == 0) {
             ploidy = vt.size() > 4 + n ? (vt.size() - 4) / n : 1;
@@ -145,8 +144,8 @@ int read_genotype_char(const string &filename, Genotype &gt)
         }
 
         if (vt.size() != 4 + ploidy * n) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vt.size() << " != "
-                      << 4 + ploidy * n << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vt.size() << " != " << 4 + ploidy * n << "): " << filename << "\n";
             return 1;
         }
 
@@ -212,28 +211,27 @@ int read_genotype_string(const string &filename, Genotype &gt)
     }
 
     size_t ln = 0;
-
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
-        split([](char c) { return c == ' ' || c == '\t' || c == '\r'; }, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        split([](char c) { return c == ' ' || c == '\t'; }, line.begin(), line.end(), vs);
+        if ( vs.empty() )
             continue;
-        }
 
         if (vs.size() < 4) {
-            std::cerr << "ERROR: expected at least 4 columns at line " << ln << ": " << filename << "\n";
+            std::cerr << "ERROR: expected at least 4 columns at line "
+                      << ln << ": " << filename << "\n";
             return 1;
         }
 
         gt.ind.assign(vs.begin() + 4, vs.end());
-
         break;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == ':' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '/'; };
 
     size_t ploidy = 0;
     auto n = gt.ind.size();
@@ -241,13 +239,13 @@ int read_genotype_string(const string &filename, Genotype &gt)
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<Token> vt;
         split(delim, line.begin(), line.end(), vt);
-        if ( vt.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vt.empty() )
             continue;
-        }
 
         if (ploidy == 0) {
             ploidy = vt.size() > 4 + n ? (vt.size() - 4) / n : 1;
@@ -258,8 +256,8 @@ int read_genotype_string(const string &filename, Genotype &gt)
         }
 
         if (vt.size() != 4 + ploidy * n) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vt.size() << " != "
-                      << 4 + ploidy * n << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vt.size() << " != " << 4 + ploidy * n << "): " << filename << "\n";
             return 1;
         }
 
@@ -319,10 +317,9 @@ int read_file(const string &filename, string &contents)
     return 0;
 }
 
-int write_file( const string &contents, const string &filename)
+int write_file(const string &contents, const string &filename)
 {
     std::ofstream ofs(filename);
-
     if ( ! ofs ) {
         std::cerr << "ERROR: can't open file for writing: " << filename << "\n";
         return 1;
@@ -408,17 +405,18 @@ int read_phenotype(const string &filename, Phenotype &pt)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     size_t ln = 0;
     vector<string> colnames;
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
         split(delim, line.begin(), line.end(), colnames);
         if ( ! colnames.empty() )
             break;
-        std::cerr << "WARN: skipping empty line: " << ln << "\n";
     }
 
     vector<size_t> jphe;
@@ -440,17 +438,17 @@ int read_phenotype(const string &filename, Phenotype &pt)
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
         split(delim, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vs.empty() )
             continue;
-        }
 
         if (vs.size() != colnames.size()) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vs.size() << "!="
-                      << colnames.size() << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vs.size() << "!=" << colnames.size() << "): " << filename << "\n";
             return 1;
         }
 
@@ -521,26 +519,26 @@ int read_square(const string &filename, SquareData &sd)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t' || c == '\r'; };
+    auto delim = [](char c) { return c == ' ' || c == '\t'; };
 
     size_t ln = 0, cc = 0;
 
     for (string line; std::getline(ifs,line); ) {
         ++ln;
+        if ( ! line.empty() && line.back() == '\r' )
+            line.pop_back();
 
         vector<string> vs;
         split(delim, line.begin(), line.end(), vs);
-        if ( vs.empty() ) {
-            std::cerr << "WARN: skipping empty line: " << ln << "\n";
+        if ( vs.empty() )
             continue;
-        }
 
         if (cc == 0)
             cc = vs.size();
 
         if (vs.size() != cc) {
-            std::cerr << "ERROR: column count doesn't match at line " << ln << " (" << vs.size() << "!="
-                      << cc << "): " << filename << "\n";
+            std::cerr << "ERROR: column count doesn't match at line " << ln << " ("
+                      << vs.size() << "!=" << cc << "): " << filename << "\n";
             return 1;
         }
 
