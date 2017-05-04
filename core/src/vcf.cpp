@@ -1,4 +1,3 @@
-#include <ctime>
 #include <limits>
 #include <fstream>
 #include <iostream>
@@ -12,7 +11,7 @@ namespace {
 int parse_vcf_header(const string &str, vector<string> &ind)
 {
     vector<string> vs;
-    split([](char c) { return c == ' ' || c == '\t'; }, str.begin(), str.end(), vs);
+    split([](char c) { return c == '\t'; }, str.begin(), str.end(), vs);
 
     if (vs.size() != 8 && vs.size() < 10) {
         std::cerr << "ERROR: incorrect number of columns in header line: " << vs.size() << "\n";
@@ -107,14 +106,6 @@ int parse_vcf_gt(const Token &t, int &a, int &b)
     return 2;
 }
 
-string datetime_now()
-{
-    char buf[16];
-    auto t = std::time(nullptr);
-    std::strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", std::localtime(&t));
-    return string(buf);
-}
-
 } // namespace
 
 int read_vcf(const string &filename, Genotype &gt)
@@ -135,7 +126,7 @@ int read_vcf(const string &filename, Genotype &gt)
 
         if (ln == 1 && line.compare(0,13,"##fileformat=") == 0) {
             ver = line.substr(13);
-            if (ver != "VCFv4.0" && ver != "VCFv4.1" && ver != "VCFv4.2") {
+            if (ver != "VCFv4.0" && ver != "VCFv4.1" && ver != "VCFv4.2" && ver != "VCFv4.3") {
                 std::cerr << "ERROR: unsupported VCF file version: " << line << "\n";
                 return 1;
             }
@@ -166,7 +157,7 @@ int read_vcf(const string &filename, Genotype &gt)
         return 1;
     }
 
-    auto delim = [](char c) { return c == ' ' || c == '\t'; };
+    auto delim = [](char c) { return c == '\t'; };
 
     int ploidy = -1;
     size_t ncols = gt.ind.empty() ? 8 : gt.ind.size() + 9;
@@ -258,7 +249,6 @@ int write_vcf(const Genotype &gt, const string &filename, bool diploid)
     bool haploid = gt.ploidy == 1;
 
     ofs << "##fileformat=VCFv4.2\n";
-    ofs << "##filedate=" << datetime_now() << "\n";
 
     ofs << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO";
     if ( ! gt.ind.empty() ) {
