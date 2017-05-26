@@ -337,7 +337,7 @@ void AppLDB::make_snpldb(const vector<size_t> &snps, Genotype &gt) const
     subset(haps,ord).swap(haps);
     subset(freq,ord).swap(freq);
 
-    auto mhc = static_cast<int>(std::ceil(m_par.mhf*n));
+    auto mhc = static_cast<int>(std::ceil(m_par.mhf*n*m_gt.ploidy));
     int na = std::count_if(freq.begin(), freq.end(), [mhc](int a) { return a >= mhc; });
 
     vector<int> hc(m);
@@ -386,6 +386,10 @@ void AppLDB::make_snpldb(const vector<size_t> &snps, Genotype &gt) const
             v.push_back(code);
         }
     }
+
+    if (na == 0)
+        std::fill(v.begin(), v.end(), 0);
+
     gt.dat.push_back(v);
 
     vector<string> allele;
