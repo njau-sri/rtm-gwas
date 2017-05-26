@@ -248,8 +248,8 @@ void AppLDB::recode_save_allele(Genotype &gt) const
         auto n = gt.allele[i].size();
         for (size_t j = 0; j < n; ++j) {
             if ( ofs )
-                ofs << gt.loc[i] << "\t" << j+1 << "\t" << gt.allele[i][j] << "\n";
-            gt.allele[i][j] = std::to_string(j+1);
+                ofs << gt.loc[i] << "\t" << j << "\t" << gt.allele[i][j] << "\n";
+            gt.allele[i][j] = std::to_string(j);
         }
     }
 }
