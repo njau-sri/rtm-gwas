@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VER=v1.1
+VER=v1.2
 
 if [ $# -ne 1 ]; then
     echo "usage: $0 lnx64|win32|win64|osx64"

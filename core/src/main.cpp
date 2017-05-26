@@ -17,7 +17,7 @@ extern "C" {
 
 int main(int argc, char *argv[])
 {
-    std::cerr << "RTM-GWAS v1.1 (Built on " __DATE__ " at " __TIME__ ")\n"
+    std::cerr << "RTM-GWAS v1.2 (Built on " __DATE__ " at " __TIME__ ")\n"
                  "  https://github.com/njau-sri/rtm-gwas\n";
 
     if (argc < 2) {
