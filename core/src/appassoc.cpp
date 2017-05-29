@@ -616,6 +616,13 @@ string AppAssoc::fit(int phe, const vector<size_t> &loc) const
     auto atab = m_par.sstype == 3 ? glm.solve3(y) : glm.solve1(y);
     auto est = glm.coeff(y);
 
+    for (auto &e : atab.p) {
+        if (e == 0.0) {
+            e = std::numeric_limits<double>::min();
+            std::cerr << "WARNING: p-value is out of range, set to minimum " << e << "\n";
+        }
+    }
+
     std::ostringstream oss;
 
     oss << "<ANOVA>\nSource\tDF\tSS\tMS\tF\tp\n";
