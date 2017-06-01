@@ -8,6 +8,6 @@ void assoc_RTM(int multtest, int maxstep, double alpha, double maxrsq,
                const vector<double> &pheno,
                const vector< vector<double> > &addcov,
                const vector< vector<double> > &intcov,
-               vector<size_t> &result);
+               vector<size_t> &result, vector<double> &ps);
 
 #endif // ASSOCRTM_H

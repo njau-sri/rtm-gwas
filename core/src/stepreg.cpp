@@ -1,3 +1,4 @@
+#include <limits>
 #include <memory>
 #include <iostream>
 #include <algorithm>
@@ -31,6 +32,8 @@ void StepReg::forward(const vector<double> &y)
         q0 += m_cols[i];
     }
 
+    m_ps.assign(m, std::numeric_limits<double>::quiet_NaN());
+
     lstsqr->solve(q0, y, x);
     auto dfe0 = lstsqr->stats().dfe;
     auto sse0 = lstsqr->stats().sse;
@@ -41,7 +44,8 @@ void StepReg::forward(const vector<double> &y)
     if (maxstep <= 0 || maxstep > nx)
         maxstep = nx;
 
-    std::cerr << "INFO: model selection forward step 0: " << 1-sse0/sst << "\n";
+    auto rsq = 1 - sse0 / sst;
+    std::cerr << "INFO: forward selection step 0: " << rsq << "\n";
 
     for (size_t step = 0; step < maxstep; ++step) {
         size_t idx = 0;
@@ -68,7 +72,10 @@ void StepReg::forward(const vector<double> &y)
                     dfe = dfe1;
                     sse = sse1;
                 }
+                m_ps[j] = p;
             }
+            else
+                m_ps[j] = 1.0;
         }
 
         double alpha = m_par.sle;
@@ -82,7 +89,8 @@ void StepReg::forward(const vector<double> &y)
         if (pval > alpha)
             break;
 
-        if (1-sse/sst > m_par.maxrsq)
+        rsq = 1 - sse / sst;
+        if (rsq > m_par.maxrsq)
             break;
 
         m_model.push_back(idx);
@@ -94,7 +102,7 @@ void StepReg::forward(const vector<double> &y)
         dfe0 = dfe;
         sse0 = sse;
 
-        std::cerr << "INFO: model selection forward step " << step+1 << ": " << pval << " " << 1-sse0/sst << "\n";
+        std::cerr << "INFO: forward selection step " << step+1 << ": " << pval << " " << rsq << "\n";
     }
 }
 
@@ -152,9 +160,11 @@ void StepReg::backward(const vector<double> &y)
                 auto fval = ((sse0-sse1)/(dfe0-dfe1)) / (sse1/dfe1);
                 auto pval = fcdf(fval, dfe0-dfe1, dfe1, false);
                 ps.push_back(pval);
+                m_ps[i] = pval;
             }
             else {
                 ps.push_back(1.0);
+                m_ps[i] = 1.0;
             }
         }
 
@@ -163,7 +173,7 @@ void StepReg::backward(const vector<double> &y)
             break;
 
         m_model.erase(m_model.begin() + (itr - ps.begin()));
-        std::cerr << "INFO: model selection backward step " << ++step << ": " << *itr << "\n";
+        std::cerr << "INFO: backward elimination step " << ++step << ": " << *itr << "\n";
     }
 }
 

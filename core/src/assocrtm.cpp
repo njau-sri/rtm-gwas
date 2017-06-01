@@ -1,3 +1,4 @@
+#include <limits>
 #include <memory>
 #include <utility>
 #include <algorithm>
@@ -10,7 +11,7 @@ void assoc_RTM(int multtest, int maxstep, double alpha, double maxrsq,
                const vector<double> &pheno,
                const vector< vector<double> > &addcov,
                const vector< vector<double> > &intcov,
-               vector<size_t> &result)
+               vector<size_t> &result, vector<double> &ps)
 {
     auto stepreg = std::make_shared<StepReg>();
 
@@ -70,4 +71,8 @@ void assoc_RTM(int multtest, int maxstep, double alpha, double maxrsq,
 
     result = stepreg->model();
     subset(idx,result).swap(result);
+
+    ps.assign(m, std::numeric_limits<double>::quiet_NaN());
+    for (size_t i = 0; i < idx.size(); ++i)
+        ps[idx[i]] = stepreg->ps()[i];
 }

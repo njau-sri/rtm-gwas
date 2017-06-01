@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <fstream>
 #include <sstream>
@@ -467,6 +468,8 @@ void AppAssoc::RTM()
     if ( ! ofs_fit )
         std::cerr << "ERROR: can't open file: " << m_par.out << ".rtm.fit.txt" << "\n";
 
+    vector< vector<double> > ps;
+
     for (size_t i = 0; i < t; ++i) {
         std::cerr << "INFO: processing phenotype: " << m_pt.phe[i] << "\n";
 
@@ -495,13 +498,16 @@ void AppAssoc::RTM()
         }
 
         vector<size_t> result;
+        vector<double> p1;
 
         if (m_par.preselect > 0.0 && m_par.preselect < 1.0) {
             vector<double> st;
             assoc_LM(haploid, m_gt.dat, obs, y, addcov, intcov, st);
 
+            p1.assign(m, std::numeric_limits<double>::quiet_NaN());
             vector<size_t> idx;
             for (size_t j = 0; j < m; ++j) {
+                p1[j] = st[m+j];
                 if (st[m+j] <= m_par.preselect || ( ! intcov.empty() && st[4*m+j] <= m_par.preselect))
                     idx.push_back(j);
             }
@@ -509,15 +515,21 @@ void AppAssoc::RTM()
             auto geno = subset(m_gt.dat, idx);
             std::cerr << "INFO: after pre-selection, there are " << idx.size() << " loci\n";
 
+            vector<double> p2;
             assoc_RTM(multtest, m_par.maxqtl, m_par.alpha, m_par.maxrsq,
-                      haploid, geno, obs, y, addcov, intcov, result);
+                      haploid, geno, obs, y, addcov, intcov, result, p2);
 
             subset(idx, result).swap(result);
+
+            for (size_t k = 0; k < idx.size(); ++k)
+                p1[idx[k]] = p2[k];
         }
         else {
             assoc_RTM(multtest, m_par.maxqtl, m_par.alpha, m_par.maxrsq,
-                      haploid, m_gt.dat, obs, y, addcov, intcov, result);
+                      haploid, m_gt.dat, obs, y, addcov, intcov, result, p1);
         }
+
+        ps.push_back(p1);
 
         ofs << ">" << m_pt.phe[i] << "\n";
         for (auto j : result)
@@ -526,6 +538,24 @@ void AppAssoc::RTM()
 
         auto s = fit(i, result);
         ofs_fit << ">" << m_pt.phe[i] << "\n" << s << "\n";
+    }
+
+    std::ofstream ofs_ps(m_par.out + ".rtm.pvalues.txt");
+    if ( ! ofs_ps ) {
+        std::cerr << "ERROR: can't open file: " << m_par.out << ".rtm.ps.txt" << "\n";
+        return;
+    }
+
+    ofs_ps << "Locus\tChromosome\tPosition";
+    for (size_t i = 0; i < t; ++i)
+        ofs_ps << "\t" << m_pt.phe[i];
+    ofs_ps << "\n";
+
+    for (size_t j = 0; j < m; ++j) {
+        ofs_ps << m_gt.loc[j] << "\t" << m_gt.chr[j] << "\t"  << m_gt.pos[j];
+        for (size_t i = 0; i < t; ++i)
+             ofs_ps << "\t" << ps[i][j];
+        ofs_ps << "\n";
     }
 }
 

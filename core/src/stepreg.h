@@ -21,6 +21,8 @@ public:
 
     const vector<size_t>& model() const { return m_model; }
 
+    const vector<double>& ps() const { return m_ps; }
+
     void add_covariate(const vector<double> &v)
     {
         m_cofs.insert(m_cofs.end(), v.begin(), v.end());
@@ -47,6 +49,7 @@ public:
 
 private:
     Params m_par;
+    vector<double> m_ps;
     vector<double> m_cofs;
     vector<double> m_effs;
     vector<size_t> m_cols;
