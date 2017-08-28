@@ -44,8 +44,12 @@ void assoc_RTM(int multtest, int maxstep, double alpha, double maxrsq,
         }
         else {
             gab.clear();
-            for (auto i : obs)
-                gab.emplace_back(geno[j][2*i], geno[j][2*i+1]);
+            for (auto i : obs) {
+                auto a = geno[j][2*i], b = geno[j][2*i+1];
+                if (a > b)
+                    std::swap(a, b);
+                gab.emplace_back(a, b);
+            }
             design(1, factor(gab), xg);
         }
 
