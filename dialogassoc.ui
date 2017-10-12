@@ -207,6 +207,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEditVcf</tabstop>
+  <tabstop>pushButtonVcf</tabstop>
+  <tabstop>lineEditPheno</tabstop>
+  <tabstop>pushButtonPheno</tabstop>
+  <tabstop>lineEditCovar</tabstop>
+  <tabstop>pushButtonCovar</tabstop>
+  <tabstop>lineEditAlpha</tabstop>
+  <tabstop>lineEditPreselect</tabstop>
+  <tabstop>lineEditRsq</tabstop>
+  <tabstop>comboBoxMtc</tabstop>
+  <tabstop>comboBoxStype</tabstop>
+  <tabstop>checkBoxGxe</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

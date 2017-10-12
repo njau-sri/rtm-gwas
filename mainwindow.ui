@@ -47,7 +47,7 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionChangeDir"/>
     <addaction name="separator"/>
@@ -55,7 +55,7 @@
    </widget>
    <widget class="QMenu" name="menuAnalysis">
     <property name="title">
-     <string>Analysis</string>
+     <string>&amp;Analysis</string>
     </property>
     <addaction name="actionSNPLDB"/>
     <addaction name="actionGSC"/>
@@ -63,7 +63,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionContents"/>
     <addaction name="actionAbout"/>
@@ -151,41 +151,48 @@ color: rgb(0, 255, 0);</string>
   </widget>
   <action name="actionChangeDir">
    <property name="text">
-    <string>Change dir</string>
+    <string>&amp;Change dir</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
-    <string>Exit</string>
+    <string>E&amp;xit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionSNPLDB">
    <property name="text">
-    <string>SNPLDB</string>
+    <string>&amp;SNPLDB</string>
    </property>
   </action>
   <action name="actionGSC">
    <property name="text">
-    <string>GSC</string>
+    <string>&amp;GSC</string>
    </property>
   </action>
   <action name="actionAssociation">
    <property name="text">
-    <string>Association</string>
+    <string>&amp;Association</string>
    </property>
   </action>
   <action name="actionContents">
    <property name="text">
-    <string>Contents</string>
+    <string>Con&amp;tents</string>
    </property>
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>About</string>
+    <string>A&amp;bout</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>listWidgetFile</tabstop>
+  <tabstop>plainTextEditLog</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
