@@ -53,8 +53,6 @@ QStringList DialogAssoc::getArgs() const
     if (ui->comboBoxMtc->currentIndex() != 0)
         args << QLatin1String("--mtc") << ui->comboBoxMtc->currentText();
 
-    args << QLatin1String("--sstype") << ui->comboBoxStype->currentText();
-
     if ( ! ui->checkBoxGxe->isChecked() )
         args << QLatin1String("--no-gxe");
 

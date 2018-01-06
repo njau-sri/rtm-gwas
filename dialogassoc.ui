@@ -118,7 +118,7 @@
       <item row="2" column="1">
        <widget class="QLineEdit" name="lineEditRsq">
         <property name="text">
-         <string>0.99</string>
+         <string>0.95</string>
         </property>
        </widget>
       </item>
@@ -126,23 +126,6 @@
        <widget class="QLabel" name="labelMtc">
         <property name="text">
          <string>Multiple testing correction:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="labelStype">
-        <property name="text">
-         <string>Sum of squares type:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QCheckBox" name="checkBoxGxe">
-        <property name="text">
-         <string>Genotype-enviroment interaction</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -166,17 +149,13 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QComboBox" name="comboBoxStype">
-        <item>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </item>
+       <widget class="QCheckBox" name="checkBoxGxe">
+        <property name="text">
+         <string>Genotype-enviroment interaction</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -218,7 +197,6 @@
   <tabstop>lineEditPreselect</tabstop>
   <tabstop>lineEditRsq</tabstop>
   <tabstop>comboBoxMtc</tabstop>
-  <tabstop>comboBoxStype</tabstop>
   <tabstop>checkBoxGxe</tabstop>
  </tabstops>
  <resources/>
