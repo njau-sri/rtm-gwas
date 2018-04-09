@@ -35,7 +35,7 @@ QStringList DialogSNPLDB::getArgs() const
         args << QLatin1String("--vcf") << ui->lineEditVcf->text();
 
     if ( ! ui->lineEditBlock->text().isEmpty() )
-        args << QLatin1String("--block") << ui->lineEditBlock->text();
+        args << QLatin1String("--blk") << ui->lineEditBlock->text();
 
     if ( ! ui->lineEditMaf->text().isEmpty() )
         args << QLatin1String("--maf") << ui->lineEditMaf->text();
