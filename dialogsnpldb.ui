@@ -21,17 +21,17 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="labelVcf">
+       <widget class="QLabel" name="labelVCF">
         <property name="text">
          <string>VCF:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEditVcf"/>
+       <widget class="QLineEdit" name="lineEditVCF"/>
       </item>
       <item row="0" column="2">
-       <widget class="QPushButton" name="pushButtonVcf">
+       <widget class="QPushButton" name="pushButtonVCF">
         <property name="text">
          <string>Browse...</string>
         </property>

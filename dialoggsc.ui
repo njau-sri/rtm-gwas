@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>315</width>
-    <height>206</height>
+    <height>221</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,19 +19,36 @@
      <property name="title">
       <string>Data</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="label">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButtonVCF">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditVCF"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelVCF">
         <property name="text">
          <string>VCF:</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QLineEdit" name="lineEditVcf"/>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelGRM">
+        <property name="text">
+         <string>GRM:</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="pushButtonVcf">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEditGRM"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="pushButtonGRM">
         <property name="text">
          <string>Browse...</string>
         </property>
@@ -49,7 +66,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="labelTop">
         <property name="text">
-         <string>Number of.eigenvectors:</string>
+         <string>Number of eigenvectors:</string>
         </property>
        </widget>
       </item>
@@ -57,6 +74,20 @@
        <widget class="QLineEdit" name="lineEditTop">
         <property name="text">
          <string>10</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelOpenMP">
+        <property name="text">
+         <string>OpenMP multithreading:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEditOpenMP">
+        <property name="text">
+         <string>0</string>
         </property>
        </widget>
       </item>

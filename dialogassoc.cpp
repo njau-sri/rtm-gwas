@@ -11,9 +11,10 @@ DialogAssoc::DialogAssoc(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->lineEditVcf->setText(Parameter::geno);
+    ui->lineEditVCF->setText(Parameter::vcf);
     ui->lineEditPheno->setText(Parameter::pheno);
     ui->lineEditCovar->setText(Parameter::covar);
+    ui->lineEditOpenMP->setText(QString::number(Parameter::openmp));
 
     connect(ui->buttonBox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(apply()));
 }
@@ -25,15 +26,15 @@ DialogAssoc::~DialogAssoc()
 
 QString DialogAssoc::getProg() const
 {
-    return QDir(QApplication::applicationDirPath()).filePath(QLatin1String("assoc"));
+    return QDir(QApplication::applicationDirPath()).filePath(QLatin1String("rtm-gwas-assoc"));
 }
 
 QStringList DialogAssoc::getArgs() const
 {
     QStringList args;
 
-    if ( ! ui->lineEditVcf->text().isEmpty() )
-        args << QLatin1String("--vcf") << ui->lineEditVcf->text();
+    if ( ! ui->lineEditVCF->text().isEmpty() )
+        args << QLatin1String("--vcf") << ui->lineEditVCF->text();
 
     if ( ! ui->lineEditPheno->text().isEmpty() )
         args << QLatin1String("--pheno") << ui->lineEditPheno->text();
@@ -53,10 +54,13 @@ QStringList DialogAssoc::getArgs() const
     if (ui->comboBoxMtc->currentIndex() != 0)
         args << QLatin1String("--mtc") << ui->comboBoxMtc->currentText();
 
+    if (ui->lineEditOpenMP->text().toInt() > 0)
+        args << QLatin1String("--openmp");
+
     if ( ! ui->checkBoxGxe->isChecked() )
         args << QLatin1String("--no-gxe");
 
-    QString prefix = QLatin1String("assoc.out.");
+    QString prefix = QLatin1String("rtm-gwas-assoc.out.");
     prefix += QDateTime::currentDateTime().toString(QLatin1String("yyMMdd_hhmmsszzz"));
 
     args << QLatin1String("--out") << QDir(Parameter::work).absoluteFilePath(prefix);
@@ -66,16 +70,20 @@ QStringList DialogAssoc::getArgs() const
 
 void DialogAssoc::apply()
 {
-    Parameter::geno = ui->lineEditVcf->text();
+    Parameter::vcf = ui->lineEditVCF->text();
     Parameter::pheno = ui->lineEditPheno->text();
     Parameter::covar = ui->lineEditCovar->text();
+
+    Parameter::openmp = ui->lineEditOpenMP->text().toInt();
+    if (Parameter::openmp < 0)
+        Parameter::openmp = 0;
 }
 
-void DialogAssoc::on_pushButtonVcf_clicked()
+void DialogAssoc::on_pushButtonVCF_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose VCF file"), Parameter::open);
     if (!fileName.isEmpty()) {
-        ui->lineEditVcf->setText(fileName);
+        ui->lineEditVCF->setText(fileName);
         Parameter::open = QFileInfo(fileName).absolutePath();
     }
 }

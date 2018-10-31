@@ -111,7 +111,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About RTM-GWAS"),
         tr(
-    "<h3>RTM-GWAS (Built on %1 at %2)</h3>"
+    "<h3>RTM-GWAS 1.5 (Built on %1 at %2)</h3>"
     "<p><a href=%3>%3</a></p>"
         ).arg(QLatin1String(__DATE__), QLatin1String(__TIME__),
               QLatin1String("https://github.com/njau-sri/rtm-gwas")));
@@ -243,6 +243,12 @@ void MainWindow::startProcess(const QString &prog, const QStringList &args)
 
     args_ = args;
     proc_->setWorkingDirectory(Parameter::work);
+
+    if (Parameter::openmp > 0) {
+        QStringList env = QProcess::systemEnvironment();
+        env << QString("OMP_NUM_THREADS=%1").arg(Parameter::openmp);
+        proc_->setEnvironment(env);
+    }
 
     proc_->start(prog, args);
     if ( ! proc_->waitForStarted() ) {

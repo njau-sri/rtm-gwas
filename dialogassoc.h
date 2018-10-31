@@ -28,7 +28,7 @@ public slots:
 
 private slots:
 
-    void on_pushButtonVcf_clicked();
+    void on_pushButtonVCF_clicked();
 
     void on_pushButtonPheno_clicked();
 

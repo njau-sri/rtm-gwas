@@ -9,13 +9,16 @@ struct Parameter
     static QString work;
     static QString open;
 
-    static QString geno;
+    static QString vcf;
     static QString pheno;
     static QString covar;
     static QString block;
+    static QString grm;
 
     static int txtsize;
     static int logsize;
+
+    static int openmp;
 
     static bool delete_onexit;
 };
