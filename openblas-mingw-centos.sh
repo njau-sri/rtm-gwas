@@ -35,7 +35,7 @@ rm -rf OpenBLAS-$VER
 tar zxf OpenBLAS-${VER}.tar.gz
 cd OpenBLAS-$VER
 
-make $OPTS $THREAD1 HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
+make $OPTS $THREAD0 HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
 
 cp libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
 cd $TOP
