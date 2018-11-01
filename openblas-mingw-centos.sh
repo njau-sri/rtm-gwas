@@ -12,18 +12,14 @@ fi
 
 TOP=$(pwd)
 
-OPTS="DYNAMIC_ARCH=1 DYNAMIC_OLDER=0 NO_CBLAS=1 NO_LAPACKE=1 NO_SHARED=1"
+OPTS="USE_THREAD=0 DYNAMIC_ARCH=1 DYNAMIC_OLDER=0 NO_CBLAS=1 NO_LAPACKE=1 NO_SHARED=1"
 
-THREAD0="USE_THREAD=0"
-THREAD1="USE_THREAD=1 NUM_THREADS=4 GEMM_MULTITHREADING_THRESHOLD=50 NO_AFFINITY=1"
-
-CROSS=
-LIBDIR=
 if [[ $1 == mingw32 ]]; then
-    OPTS="$OPTS USE_NETLIB_GEMV=1"
+    OPTS="$OPTS NUM_THREADS=8 USE_NETLIB_GEMV=1"
     CROSS=i686-w64-mingw32-
     LIBDIR=/usr/i686-w64-mingw32/sys-root/mingw/lib
 elif [[ $1 == mingw64 ]]; then
+    OPTS="$OPTS NUM_THREADS=24"
     CROSS=x86_64-w64-mingw32-
     LIBDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 else
@@ -35,7 +31,7 @@ rm -rf OpenBLAS-$VER
 tar zxf OpenBLAS-${VER}.tar.gz
 cd OpenBLAS-$VER
 
-make $OPTS $THREAD0 HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
+make $OPTS HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
 
-cp libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
+cp -f libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
 cd $TOP

@@ -17,5 +17,5 @@ cp make.inc.example make.inc
 
 make blaslib lapacklib || exit 1
 
-sudo cp librefblas.a liblapack.a ${LIBDIR}/
+sudo cp -f librefblas.a liblapack.a ${LIBDIR}/
 cd $TOP

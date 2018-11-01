@@ -36,5 +36,5 @@ sed -i "s/= ranlib/= ${CROSS}ranlib/" make.inc
 
 make blaslib lapacklib || exit 1
 
-cp librefblas.a liblapack.a ${LIBDIR}/
+cp -f librefblas.a liblapack.a ${LIBDIR}/
 cd $TOP

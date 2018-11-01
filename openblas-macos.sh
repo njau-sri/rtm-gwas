@@ -21,5 +21,5 @@ cd OpenBLAS-$VER
 
 make $OPTS $THREAD0 libs netlib || exit 1
 
-sudo cp libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
+sudo cp -f libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
 cd $TOP
