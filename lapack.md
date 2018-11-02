@@ -13,6 +13,10 @@
 
 [openblas-mingw-centos.sh](openblas-mingw-centos.sh)
 
+### OpenBLAS Issue
+
+https://github.com/xianyi/OpenBLAS/issues/1847
+
 # macOS High Sierra
 
 ### NETLIB-LAPACK
