@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-BIN=rtm-gwas-1.5-$1
+BIN=rtm-gwas-v1.5-$1
 
 TOP=$(pwd)
 
