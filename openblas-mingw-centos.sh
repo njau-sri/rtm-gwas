@@ -19,7 +19,7 @@ if [[ $1 == mingw32 ]]; then
     CROSS=i686-w64-mingw32-
     LIBDIR=/usr/i686-w64-mingw32/sys-root/mingw/lib
 elif [[ $1 == mingw64 ]]; then
-    OPTS="$OPTS NUM_THREADS=24"
+    OPTS="$OPTS NUM_THREADS=16"
     CROSS=x86_64-w64-mingw32-
     LIBDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 else
@@ -33,5 +33,5 @@ cd OpenBLAS-$VER
 
 make $OPTS HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
 
-cp -f libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
+cp libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
 cd $TOP
