@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-BIN=rtm-gwas-v1.5-$1
+BIN=rtm-gwas-v1.5.1-$1
 
 TOP=$(pwd)
 
@@ -20,20 +20,24 @@ git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 
 cd ${TOP}/rtm-gwas-snpldb
-chmod +x install-centos.sh
-./install-centos.sh $1
+chmod +x install-*.sh
+./install-linux.sh $1
 
 cd ${TOP}/rtm-gwas-gsc
-chmod +x install-centos.sh
-./install-centos.sh $1
+chmod +x install-*.sh
+./install-linux.sh $1
 
 cd ${TOP}/rtm-gwas-assoc
-chmod +x install-centos.sh
-./install-centos.sh $1
+chmod +x install-*.sh
+if [ $1 == "lnx64" ]; then
+    ./install-linux-mkl.sh $1
+else
+    ./install-linux.sh $1
+fi
 
 cd ${TOP}/rtm-gwas-gui
-chmod +x install-centos.sh
-./install-centos.sh $1
+chmod +x install-*.sh
+./install-linux.sh $1
 
 
 cd ${TOP}
