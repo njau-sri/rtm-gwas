@@ -1,25 +1,25 @@
-# CentOS 7
+# Math Kernel Library (MKL)
 
-### Linux NETLIB-LAPACK, OpenBLAS
+https://software.intel.com/en-us/mkl
+
+# NETLIB-LAPACK and OpenBLAS
+
+### CentOS 7
+
+For Linux
 
     yum install blas-static lapack-static
     yum install openblas-static
 
-### Windows NETLIB-LAPACK
+For Windows
 
 [lapack-mingw-centos.sh](lapack-mingw-centos.sh)
 
-### Windows OpenBLAS
-
 [openblas-mingw-centos.sh](openblas-mingw-centos.sh)
 
-### OpenBLAS Issue
+### macOS
 
-https://github.com/xianyi/OpenBLAS/issues/1847
-
-# macOS High Sierra
-
-### NETLIB-LAPACK
+NETLIB-LAPACK
 
 [lapack-macos.sh](lapack-macos.sh)
 
@@ -32,8 +32,7 @@ Static linking
 
     -llapack -lrefblas $LIBGFORTRAN $LIBQUADMATH $LIBGCC
 
-
-### OpenBLAS
+OpenBLAS
 
 [openblas-macos.sh](openblas-macos.sh)
 
