@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-BIN=rtm-gwas-v1.5.1-macos
+BIN=rtm-gwas-2019.0.dev-macos
 
 TOP=$(pwd)
 
@@ -20,19 +20,19 @@ git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 
 cd ${TOP}/rtm-gwas-snpldb
-chmod +x install-*.sh
+chmod +x install-macos.sh
 ./install-macos.sh
 
 cd ${TOP}/rtm-gwas-gsc
-chmod +x install-*.sh
+chmod +x install-macos.sh
 ./install-macos.sh
 
 cd ${TOP}/rtm-gwas-assoc
-chmod +x install-*.sh
+chmod +x install-macos.sh
 ./install-macos-mkl.sh
 
 cd ${TOP}/rtm-gwas-gui
-chmod +x install-*.sh
+chmod +x install-macos.sh
 ./install-macos.sh
 
 
