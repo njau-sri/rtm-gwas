@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-BIN=rtm-gwas-v1.5.1-$1
+BIN=rtm-gwas-2019.0.dev-$1
 
 TOP=$(pwd)
 
@@ -20,24 +20,24 @@ git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 
 cd ${TOP}/rtm-gwas-snpldb
-chmod +x install-*.sh
-./install-linux.sh $1
+chmod +x install-cross.sh
+./install-cross.sh $1
 
 cd ${TOP}/rtm-gwas-gsc
-chmod +x install-*.sh
-./install-linux.sh $1
+chmod +x install-cross.sh
+./install-cross.sh $1
 
 cd ${TOP}/rtm-gwas-assoc
-chmod +x install-*.sh
-if [ $1 == "lnx64" ]; then
-    ./install-linux-mkl.sh $1
+chmod +x install-cross.sh
+if [ $1 == "glnx64" ]; then
+    ./install-glnx64-mkl.sh $1
 else
-    ./install-linux.sh $1
+    ./install-cross.sh $1
 fi
 
 cd ${TOP}/rtm-gwas-gui
-chmod +x install-*.sh
-./install-linux.sh $1
+chmod +x install-cross.sh
+./install-cross.sh $1
 
 
 cd ${TOP}
