@@ -53,5 +53,5 @@ mv $TOP/rtm-gwas-gui/$1/rtm-gwas-gui* $BIN/
 if [ $1 == "glnx64" ]; then
     tar zcf $BIN.tar.gz $BIN
 else
-    zip -qr $BIN $BIN
+    zip -qr $BIN.zip $BIN
 fi
