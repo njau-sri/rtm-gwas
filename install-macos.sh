@@ -19,19 +19,19 @@ rm -rf rtm-gwas-gui
 git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 
-cd ${TOP}/rtm-gwas-snpldb
+cd $TOP/rtm-gwas-snpldb
 chmod +x install-macos.sh
 ./install-macos.sh || exit 1
 
-cd ${TOP}/rtm-gwas-gsc
+cd $TOP/rtm-gwas-gsc
 chmod +x install-macos.sh
 ./install-macos.sh || exit 1
 
-cd ${TOP}/rtm-gwas-assoc
+cd $TOP/rtm-gwas-assoc
 chmod +x install-macos.sh
 ./install-macos-mkl.sh || exit 1
 
-cd ${TOP}/rtm-gwas-gui
+cd $TOP/rtm-gwas-gui
 chmod +x install-macos.sh
 ./install-macos.sh || exit 1
 
@@ -39,13 +39,13 @@ chmod +x install-macos.sh
 APP=rtm-gwas-gui.app
 
 
-cd ${TOP}
+cd $TOP
 rm -rf $BIN
 mkdir $BIN
 
-mv ${TOP}/rtm-gwas-gui/macos/${APP} ${BIN}/
-mv ${TOP}/rtm-gwas-snpldb/macos/rtm-gwas-snpldb ${BIN}/${APP}/Contents/MacOS/
-mv ${TOP}/rtm-gwas-gsc/macos/rtm-gwas-gsc ${BIN}/${APP}/Contents/MacOS/
-mv ${TOP}/rtm-gwas-assoc/macos/rtm-gwas-assoc ${BIN}/${APP}/Contents/MacOS/
+mv $TOP/rtm-gwas-gui/macos/$APP $BIN/
+mv $TOP/rtm-gwas-snpldb/macos/rtm-gwas-snpldb $BIN/$APP/Contents/MacOS/
+mv $TOP/rtm-gwas-gsc/macos/rtm-gwas-gsc $BIN/$APP/Contents/MacOS/
+mv $TOP/rtm-gwas-assoc/macos/rtm-gwas-assoc $BIN/$APP/Contents/MacOS/
 
-tar zcf ${BIN}.tar.gz ${BIN}
+tar zcf $BIN.tar.gz $BIN
