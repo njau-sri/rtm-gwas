@@ -2,8 +2,8 @@
 
 VER=3.8.0
 
-if [[ ! -f lapack-${VER}.tar.gz ]]; then
-    wget http://www.netlib.org/lapack/lapack-${VER}.tar.gz || exit 1
+if [[ ! -f lapack-$VER.tar.gz ]]; then
+    wget http://www.netlib.org/lapack/lapack-$VER.tar.gz || exit 1
 fi
 
 if [[ $# -ne 1 ]]; then
@@ -26,7 +26,7 @@ else
 fi
 
 rm -rf lapack-$VER
-tar zxf lapack-${VER}.tar.gz
+tar zxf lapack-$VER.tar.gz
 cd lapack-$VER
 
 cp make.inc.example make.inc
@@ -36,5 +36,5 @@ sed -i "s/= ranlib/= ${CROSS}ranlib/" make.inc
 
 make blaslib lapacklib || exit 1
 
-cp librefblas.a liblapack.a ${LIBDIR}/
+cp librefblas.a liblapack.a $LIBDIR/
 cd $TOP

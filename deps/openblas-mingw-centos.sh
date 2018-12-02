@@ -2,8 +2,8 @@
 
 VER=0.3.4
 
-if [ ! -f OpenBLAS-${VER}.tar.gz ]; then
-    wget -O OpenBLAS-${VER}.tar.gz https://github.com/xianyi/OpenBLAS/archive/v${VER}.tar.gz || exit 1
+if [ ! -f OpenBLAS-$VER.tar.gz ]; then
+    wget -O OpenBLAS-$VER.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$VER.tar.gz || exit 1
 fi
 
 if [[ $# -ne 1 ]]; then
@@ -27,10 +27,10 @@ else
 fi
 
 rm -rf OpenBLAS-$VER
-tar zxf OpenBLAS-${VER}.tar.gz
+tar zxf OpenBLAS-$VER.tar.gz
 cd OpenBLAS-$VER
 
 make $OPTS HOSTCC=gcc CC=${CROSS}gcc FC=${CROSS}gfortran libs netlib || exit 1
 
-cp libopenblas*-r${VER}.a ${LIBDIR}/libopenblas.a
+cp libopenblas*-r$VER.a $LIBDIR/libopenblas.a
 cd $TOP
