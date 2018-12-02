@@ -21,19 +21,19 @@ git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 cd ${TOP}/rtm-gwas-snpldb
 chmod +x install-macos.sh
-./install-macos.sh
+./install-macos.sh || exit 1
 
 cd ${TOP}/rtm-gwas-gsc
 chmod +x install-macos.sh
-./install-macos.sh
+./install-macos.sh || exit 1
 
 cd ${TOP}/rtm-gwas-assoc
 chmod +x install-macos.sh
-./install-macos-mkl.sh
+./install-macos-mkl.sh || exit 1
 
 cd ${TOP}/rtm-gwas-gui
 chmod +x install-macos.sh
-./install-macos.sh
+./install-macos.sh || exit 1
 
 
 APP=rtm-gwas-gui.app
