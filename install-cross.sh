@@ -1,7 +1,11 @@
 #!/bin/bash
 
 
-BIN=rtm-gwas-2019.0.dev-$1
+# -DRTM_GWAS_VERSION=\"$VER\"
+VER="2019.0.dev"
+
+
+BIN=rtm-gwas-$VER-$1
 
 TOP=$(pwd)
 
