@@ -1,9 +1,10 @@
 #!/bin/bash
 
 
-# -DRTM_GWAS_VERSION=\"$VER\"
-VER="2019.0.dev"
+VER=2019.0.dev
 
+
+export RTM_GWAS_VERSION=$VER
 
 BIN=rtm-gwas-$VER-$1
 
