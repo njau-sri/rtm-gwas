@@ -33,7 +33,7 @@ chmod +x install-macos.sh
 ./install-macos.sh || exit 1
 
 cd $TOP/rtm-gwas-assoc
-chmod +x install-macos.sh
+chmod +x install-macos-mkl.sh
 ./install-macos-mkl.sh || exit 1
 
 cd $TOP/rtm-gwas-gui
