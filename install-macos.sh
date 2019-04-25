@@ -41,16 +41,13 @@ chmod +x install-macos.sh
 ./install-macos.sh || exit 1
 
 
-APP=rtm-gwas-gui.app
-
-
 cd $TOP
 rm -rf $BIN
 mkdir $BIN
 
-mv $TOP/rtm-gwas-gui/macos/$APP $BIN/
-mv $TOP/rtm-gwas-snpldb/macos/rtm-gwas-snpldb $BIN/$APP/Contents/MacOS/
-mv $TOP/rtm-gwas-gsc/macos/rtm-gwas-gsc $BIN/$APP/Contents/MacOS/
-mv $TOP/rtm-gwas-assoc/macos/rtm-gwas-assoc $BIN/$APP/Contents/MacOS/
+mv $TOP/rtm-gwas-gui/macos/rtm-gwas-gui.app $BIN/
+mv $TOP/rtm-gwas-snpldb/macos/rtm-gwas-snpldb $BIN/
+mv $TOP/rtm-gwas-gsc/macos/rtm-gwas-gsc $BIN/
+mv $TOP/rtm-gwas-assoc/macos/rtm-gwas-assoc $BIN/
 
 tar zcf $BIN.tar.gz $BIN
