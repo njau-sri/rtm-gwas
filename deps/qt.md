@@ -4,6 +4,8 @@
     # yum install epel-release
     yum install mingw32-qt-static
     yum install mingw64-qt-static
+    yum install mingw32-qt5-qtbase-static
+    yum install mingw64-qt5-qtbase-static
 
 ### Toolchain
 
