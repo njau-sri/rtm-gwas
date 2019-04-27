@@ -1,7 +1,7 @@
 # CentOS 7
 
     yum install qt-devel
-    # yum install epel-release
+    yum install epel-release
     yum install mingw32-qt-static
     yum install mingw64-qt-static
     yum install mingw32-qt5-qtbase-static
@@ -10,8 +10,11 @@
 ### Toolchain
 
     qmake-qt4
-    i686-w64-mingw32-qmake-qt4
-    x86_64-w64-mingw32-qmake-qt4
+    mingw32-qmake-qt4
+    mingw64-qmake-qt4
+    mingw32-qmake-qt5
+    mingw64-qmake-qt5
+    mingw-strip
 
 # macOS High Sierra
 
