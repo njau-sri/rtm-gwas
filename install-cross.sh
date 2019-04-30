@@ -6,7 +6,7 @@ VER=2019.1
 
 export RTM_GWAS_VERSION=$VER
 
-BIN=rtm-gwas-$VER-$1
+PKG=rtm-gwas-$VER-$1
 
 TOP=$(pwd)
 
@@ -33,7 +33,7 @@ chmod +x install-cross.sh
 ./install-cross.sh $1 || exit 1
 
 cd $TOP/rtm-gwas-assoc
-if [ $1 == "glnx64" ]; then
+if [[ "$1" == "glnx64" ]]; then
     chmod +x install-glnx64-mkl.sh
     ./install-glnx64-mkl.sh $1 || exit 1
 else
@@ -42,21 +42,25 @@ else
 fi
 
 cd $TOP/rtm-gwas-gui
-chmod +x install-cross.sh
-./install-cross.sh $1 || exit 1
-
+if [[ "$1" == "glnx64" ]]; then
+    chmod +x install-cross-qt5.sh
+    ./install-cross-qt5.sh $1 || exit 1
+else
+    chmod +x install-cross.sh
+    ./install-cross.sh $1 || exit 1
+fi
 
 cd $TOP
-rm -rf $BIN
-mkdir $BIN
+rm -rf $PKG
+mkdir $PKG
 
-mv $TOP/rtm-gwas-snpldb/$1/rtm-gwas-snpldb* $BIN/
-mv $TOP/rtm-gwas-gsc/$1/rtm-gwas-gsc* $BIN/
-mv $TOP/rtm-gwas-assoc/$1/rtm-gwas-assoc* $BIN/
-mv $TOP/rtm-gwas-gui/$1/rtm-gwas-gui* $BIN/
+mv $TOP/rtm-gwas-snpldb/$1/rtm-gwas-snpldb* $PKG/
+mv $TOP/rtm-gwas-gsc/$1/rtm-gwas-gsc* $PKG/
+mv $TOP/rtm-gwas-assoc/$1/rtm-gwas-assoc* $PKG/
+mv $TOP/rtm-gwas-gui/$1/rtm-gwas-gui* $PKG/
 
-if [ $1 == "glnx64" ]; then
-    tar zcf $BIN.tar.gz $BIN
+if [[ "$1" == "glnx64" ]]; then
+    tar zcf $PKG.tar.gz $PKG
 else
-    zip -qr $BIN.zip $BIN
+    zip -qr $PKG.zip $PKG
 fi
