@@ -42,13 +42,9 @@ else
 fi
 
 cd $TOP/rtm-gwas-gui
-if [[ "$1" == "glnx64" ]]; then
-    chmod +x install-cross-qt5.sh
-    ./install-cross-qt5.sh $1 || exit 1
-else
-    chmod +x install-cross.sh
-    ./install-cross.sh $1 || exit 1
-fi
+chmod +x install.sh
+./install.sh $1 || exit 1
+
 
 cd $TOP
 rm -rf $PKG
@@ -59,8 +55,8 @@ mv $TOP/rtm-gwas-gsc/$1/rtm-gwas-gsc* $PKG/
 mv $TOP/rtm-gwas-assoc/$1/rtm-gwas-assoc* $PKG/
 mv $TOP/rtm-gwas-gui/$1/rtm-gwas-gui* $PKG/
 
-if [[ "$1" == "glnx64" ]]; then
-    tar zcf $PKG.tar.gz $PKG
-else
+if [[ $1 == win* ]]; then
     zip -qr $PKG.zip $PKG
+else
+    tar zcf $PKG.tar.gz $PKG
 fi
