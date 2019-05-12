@@ -37,8 +37,8 @@ if [[ "$1" == "glnx64" ]]; then
     chmod +x install-glnx64-mkl.sh
     ./install-glnx64-mkl.sh $1 || exit 1
 else
-    chmod +x install-cross-lapack.sh
-    ./install-cross-lapack.sh $1 || exit 1
+    chmod +x install.sh
+    ./install.sh $1 || exit 1
 fi
 
 cd $TOP/rtm-gwas-gui
