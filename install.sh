@@ -25,17 +25,20 @@ git clone https://github.com/njau-sri/rtm-gwas-gui.git
 
 
 cd $TOP/rtm-gwas-snpldb
-chmod +x install-cross.sh
-./install-cross.sh $1 || exit 1
+chmod +x install.sh
+./install.sh $1 || exit 1
 
 cd $TOP/rtm-gwas-gsc
-chmod +x install-cross.sh
-./install-cross.sh $1 || exit 1
+chmod +x install.sh
+./install.sh $1 || exit 1
 
 cd $TOP/rtm-gwas-assoc
 if [[ "$1" == "glnx64" ]]; then
     chmod +x install-glnx64-mkl.sh
     ./install-glnx64-mkl.sh $1 || exit 1
+elif [[ $1 == "macos" ]]; then
+    chmod +x install-macos-mkl.sh
+    ./install-macos-mkl.sh || exit 1
 else
     chmod +x install.sh
     ./install.sh $1 || exit 1
