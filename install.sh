@@ -12,16 +12,16 @@ TOP=$(pwd)
 
 
 rm -rf rtm-gwas-snpldb
-git clone https://github.com/njau-sri/rtm-gwas-snpldb.git
+git clone --depth 1 https://github.com/njau-sri/rtm-gwas-snpldb.git || exit 1
 
 rm -rf rtm-gwas-gsc
-git clone https://github.com/njau-sri/rtm-gwas-gsc.git
+git clone --depth 1 https://github.com/njau-sri/rtm-gwas-gsc.git || exit 1
 
 rm -rf rtm-gwas-assoc
-git clone https://github.com/njau-sri/rtm-gwas-assoc.git
+git clone --depth 1 https://github.com/njau-sri/rtm-gwas-assoc.git || exit 1
 
 rm -rf rtm-gwas-gui
-git clone https://github.com/njau-sri/rtm-gwas-gui.git
+git clone --depth 1 https://github.com/njau-sri/rtm-gwas-gui.git || exit 1
 
 
 cd $TOP/rtm-gwas-snpldb
