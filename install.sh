@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-VER=2019.2
+VER=2019.3.dev
 
 
 export RTM_GWAS_VERSION=$VER
