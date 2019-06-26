@@ -16,7 +16,7 @@ https://github.com/njau-sri/rtm-gwas/wiki
 
 ## Download
 
-[![Download rtm-gwas](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/rtm-gwas/files/current/)
+[![Download rtm-gwas](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/rtm-gwas/files/release/)
 
 ### 中国下载镜像
 
