@@ -6,4 +6,4 @@ Wiki: https://github.com/njau-sri/rtm-gwas/wiki
 
 ### 中国下载镜像
 
-https://share.weiyun.com/5tExjgB
+腾讯微云分享链接 https://share.weiyun.com/5tExjgB
