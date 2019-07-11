@@ -1,28 +1,14 @@
 #!/bin/bash
 
 
-VER=2019.3
-
+VER=2019.4.dev
 
 export RTM_GWAS_VERSION=$VER
 
 PKG=rtm-gwas-$VER-$1
 
+
 TOP=$(pwd)
-
-
-rm -rf rtm-gwas-snpldb
-git clone --depth 1 https://github.com/njau-sri/rtm-gwas-snpldb.git || exit 1
-
-rm -rf rtm-gwas-gsc
-git clone --depth 1 https://github.com/njau-sri/rtm-gwas-gsc.git || exit 1
-
-rm -rf rtm-gwas-assoc
-git clone --depth 1 https://github.com/njau-sri/rtm-gwas-assoc.git || exit 1
-
-rm -rf rtm-gwas-gui
-git clone --depth 1 https://github.com/njau-sri/rtm-gwas-gui.git || exit 1
-
 
 cd $TOP/rtm-gwas-snpldb
 chmod +x install.sh

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DialogSNPLDB</class>
+ <widget class="QDialog" name="DialogSNPLDB">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>560</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>SNPLDB</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBoxData">
+     <property name="title">
+      <string>Data</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelVCF">
+        <property name="text">
+         <string>VCF:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditVCF"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="lineEditBlock"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButtonVCF">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="pushButtonBlock">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelBlock">
+        <property name="text">
+         <string>Block:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelFam">
+        <property name="text">
+         <string>RILs:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="lineEditFam"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelGene">
+        <property name="text">
+         <string>Gene:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEditGene"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QPushButton" name="pushButtonGene">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxOption">
+     <property name="title">
+      <string>Option</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelMaf">
+        <property name="text">
+         <string>Min. minor haplotype frequency:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditMaf">
+        <property name="text">
+         <string>0.01</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelMaxlen">
+        <property name="text">
+         <string>Max. length of blocks:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEditMaxlen">
+        <property name="text">
+         <string>100000</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelLlim">
+        <property name="text">
+         <string>Lower limit CI for strong LD:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEditLlim">
+        <property name="text">
+         <string>70</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelUlim">
+        <property name="text">
+         <string>Upper limit CI for strong LD:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="lineEditUlim">
+        <property name="text">
+         <string>98</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelRecomb">
+        <property name="text">
+         <string>Upper limit CI for strong recombination:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="lineEditRecomb">
+        <property name="text">
+         <string>90</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="labelInform">
+        <property name="text">
+         <string>Min. fraction of informative strong LD:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="lineEditInform">
+        <property name="text">
+         <string>0.95</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="labelOpenMP">
+        <property name="text">
+         <string>OpenMP multithreading:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QSpinBox" name="spinBoxOpenMP">
+        <property name="maximum">
+         <number>16</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>lineEditVCF</tabstop>
+  <tabstop>pushButtonVCF</tabstop>
+  <tabstop>lineEditGene</tabstop>
+  <tabstop>pushButtonGene</tabstop>
+  <tabstop>lineEditBlock</tabstop>
+  <tabstop>pushButtonBlock</tabstop>
+  <tabstop>lineEditFam</tabstop>
+  <tabstop>lineEditMaf</tabstop>
+  <tabstop>lineEditMaxlen</tabstop>
+  <tabstop>lineEditLlim</tabstop>
+  <tabstop>lineEditUlim</tabstop>
+  <tabstop>lineEditRecomb</tabstop>
+  <tabstop>lineEditInform</tabstop>
+  <tabstop>spinBoxOpenMP</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DialogSNPLDB</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>355</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DialogSNPLDB</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>325</x>
+     <y>355</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
