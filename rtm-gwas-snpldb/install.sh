@@ -3,6 +3,8 @@
 rm -rf $1
 mkdir $1
 
+make clean
+
 if [[ $1 == "glnx64" ]]; then
 
     make || exit 1
