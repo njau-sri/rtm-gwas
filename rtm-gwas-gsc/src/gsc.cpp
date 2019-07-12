@@ -247,7 +247,7 @@ int eigen(const std::vector< std::vector<double> > &mat,
     std::vector<bint> sup(n*2);
     std::vector<double> w(n), z(n*n);
 
-    int info = C_dsyevr('V', 'A', 'U', n, a.data(), n, 0, 0, 0, 0, 0, &m, w.data(), z.data(), n, sup.data());
+    int info = call_dsyevr('V', 'A', 'U', n, a.data(), n, 0, 0, 0, 0, 0, &m, w.data(), z.data(), n, sup.data());
 
     if (info != 0)
         return 1;

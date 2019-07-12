@@ -34,7 +34,7 @@ int lsfit(const std::vector<double> &y, const std::vector<double> &x, std::vecto
     std::vector<bint> jpvt(q, 0);
     double rcond = RCOND_DGELSY_LSFIT;
 
-    int info = C_dgelsy(n, q, 1, cx.data(), n, cy.data(), ldy, jpvt.data(), rcond, &irank);
+    int info = call_dgelsy(n, q, 1, cx.data(), n, cy.data(), ldy, jpvt.data(), rcond, &irank);
 
     if (info != 0)
         return 1;
@@ -47,8 +47,8 @@ int lsfit(const std::vector<double> &y, const std::vector<double> &x, std::vecto
     if (rank < n) {
         dfe = n - rank;
         cy = y;
-        C_dgemv('N', n, q, -1.0, x.data(), n, b.data(), 1, 1.0, cy.data(), 1);
-        sse = C_dnrm2(n, cy.data(), 1);
+        call_dgemv('N', n, q, -1.0, x.data(), n, b.data(), 1, 1.0, cy.data(), 1);
+        sse = call_dnrm2(n, cy.data(), 1);
         sse *= sse;
     }
 
@@ -67,7 +67,7 @@ int lsfitc(const std::vector<double> &y, const std::vector<double> &x, std::vect
     std::vector<bint> jpvt(p, 0);
     std::vector<double> tau(m);
 
-    C_dgeqp3(q, p, z.data(), q, jpvt.data(), tau.data());
+    call_dgeqp3(q, p, z.data(), q, jpvt.data(), tau.data());
 
     size_t k = 0;
     for (size_t i = 0; i < m; ++i) {
@@ -77,18 +77,18 @@ int lsfitc(const std::vector<double> &y, const std::vector<double> &x, std::vect
 
     std::vector<double> Q(q*q);
     std::copy_n(z.begin(), q*m, Q.begin());
-    C_dorgqr(q, q, m, Q.data(), q, tau.data());
+    call_dorgqr(q, q, m, Q.data(), q, tau.data());
 
     auto Q0 = Q.data() + q*k;
 
     std::vector<double> xq(n*(q-k));
-    C_dgemm('N', 'N', n, q-k, q, 1.0, x.data(), n, Q0, q, 0.0, xq.data(), n);
+    call_dgemm('N', 'N', n, q-k, q, 1.0, x.data(), n, Q0, q, 0.0, xq.data(), n);
 
     std::vector<double> cb;
     lsfit(y, xq, cb, dfe, sse);
 
     b.resize(q);
-    C_dgemv('N', q, q-k, 1.0, Q0, q, cb.data(), 1, 0.0, b.data(), 1);
+    call_dgemv('N', q, q-k, 1.0, Q0, q, cb.data(), 1, 0.0, b.data(), 1);
 
     return 0;
 }
@@ -104,17 +104,17 @@ int glsfit(const std::vector<double> &y, const std::vector<double> &x, const std
 
     // LL' = V
     auto L = v;
-    info = C_dpotrf('L', n, L.data(), n);
+    info = call_dpotrf('L', n, L.data(), n);
     if (info != 0)
         return 1;
 
     // L^-1 * y
     auto ly = y;
-    C_dtrsv('L', 'N', 'N', n, L.data(), n, ly.data(), 1);
+    call_dtrsv('L', 'N', 'N', n, L.data(), n, ly.data(), 1);
 
     // L^-1 * y
     auto lx = x;
-    C_dtrsm('L', 'L', 'N', 'N', n, q, 1.0, L.data(), n, lx.data(), n);
+    call_dtrsm('L', 'L', 'N', 'N', n, q, 1.0, L.data(), n, lx.data(), n);
 
     // b = (X'*X)^-1 * X' * y
     double dfe = 0.0, sse = 0.0;
@@ -153,26 +153,26 @@ double glsfstat(std::size_t p, const std::vector<double> &y, const std::vector<d
 
     // V^-1  ->  iV [n,n]
     std::copy_n(v.begin(), nn, iV);
-    info = M_dsyinv(n, iV);
+    info = dsyinv(n, iV);
     if (info != 0)
         return -2;
 
     // X' V^-1  ->  XtV [q,n]
-    C_dgemm('T', 'N', q, n, n, 1.0, x.data(), n, iV, n, 0.0, XtV, q);
+    call_dgemm('T', 'N', q, n, n, 1.0, x.data(), n, iV, n, 0.0, XtV, q);
 
     // X' V^-1 X  ->  iXX [q,q]
-    C_dgemm('N', 'N', q, q, n, 1.0, XtV, q, x.data(), n, 0.0, iXVX, q);
+    call_dgemm('N', 'N', q, q, n, 1.0, XtV, q, x.data(), n, 0.0, iXVX, q);
 
     // (X' V^-1 X)^-1  ->  iXX [q,q]
-    info = M_dsyinv(q, iXVX);
+    info = dsyinv(q, iXVX);
     if (info != 0)
         return -3;
 
     // X' * V^-1 * y  ->  Xy [q,1]
-    C_dgemv('N', q, n, 1.0, XtV, q, y.data(), 1, 0.0, XVy, 1);
+    call_dgemv('N', q, n, 1.0, XtV, q, y.data(), 1, 0.0, XVy, 1);
 
     // (X' * V^-1 * X)^-1 * X' * V^-1 * y  ->  b [q,1]
-    C_dgemv('N', q, q, 1.0, iXVX, q, XVy, 1, 0.0, b, 1);
+    call_dgemv('N', q, q, 1.0, iXVX, q, XVy, 1, 0.0, b, 1);
 
     // M (X' V^-1 X)^-1 M'  ->  iMiM [p,p]
     //   M = [0 0 0 1 0; 0 0 0 0 1]
@@ -191,7 +191,7 @@ double glsfstat(std::size_t p, const std::vector<double> &y, const std::vector<d
     }
 
     // [M (X' V^-1 X)^-1 M']^-1  ->  iMiM
-    info = M_dsyinv(p, iMiM);
+    info = dsyinv(p, iMiM);
     if (info != 0)
         return -4;
 
@@ -199,10 +199,10 @@ double glsfstat(std::size_t p, const std::vector<double> &y, const std::vector<d
     auto Mb = b + q - p;
 
     // [M (X' V^-1 X)^-1 M']^-1 (Mb)  ->  ib [p,1]
-    C_dgemv('N', p, p, 1.0, iMiM, p, Mb, 1, 0.0, ib, 1);
+    call_dgemv('N', p, p, 1.0, iMiM, p, Mb, 1, 0.0, ib, 1);
 
     // (Mb)' [M (X' V^-1 X)^-1 M']^-1 (Mb)
-    auto f = C_ddot(p, Mb, 1, ib, 1);
+    auto f = call_ddot(p, Mb, 1, ib, 1);
     f /= p;
 
     return f;

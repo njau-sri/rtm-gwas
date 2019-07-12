@@ -144,7 +144,7 @@
   <ItemGroup>
     <ClCompile Include="src\cmdline.cpp" />
     <ClCompile Include="src\gsc.cpp" />
-    <ClCompile Include="src\lapack.cpp" />
+    <ClCompile Include="src\lapack.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pheno.cpp" />
     <ClCompile Include="src\util.cpp" />
