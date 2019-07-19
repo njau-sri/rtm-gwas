@@ -158,7 +158,8 @@ int parse_vcf_entry(const std::string &s, VcfEntry &e)
         int info = parse_vcf_gt(v[i].data(), v[i].size(), a, b);
 
         if ((info != 1 && info != 2) || a >= na || b >= na) {
-            std::cerr << "ERROR: invalid genotype data: " << v[i].to_string() << "\n";
+            std::cerr << "ERROR: invalid genotype data: " << e.chr << " " << e.pos << " "
+                << v[3].to_string() << " " << v[4].to_string() << " " << v[i].to_string() << "\n";
             return 1;
         }
 
