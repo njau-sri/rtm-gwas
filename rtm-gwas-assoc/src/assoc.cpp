@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <functional>
-#include "version.h"
 #include "cmdline.h"
 #include "util.h"
 #include "vcf.h"
@@ -11,6 +10,11 @@
 #include "lsfit.h"
 #include "stepreg.h"
 #include "anova.h"
+
+
+#ifndef RTM_GWAS_VERSION
+#define RTM_GWAS_VERSION  "2019.4.dev"
+#endif
 
 
 using std::ptrdiff_t;
@@ -607,7 +611,7 @@ int fit_multi_locus_model(size_t t, const std::vector<size_t> &loc,
 
 int rtm_gwas_assoc(int argc, char *argv[])
 {
-    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION_STRING " ASSOC (Built on " __DATE__ " " __TIME__ ")\n";
+    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION " ASSOC (Built on " __DATE__ " " __TIME__ ")\n";
 
     CmdLine cmd;
 

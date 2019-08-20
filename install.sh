@@ -1,12 +1,8 @@
 #!/bin/bash
 
-
 VER=2019.4.dev
 
-export RTM_GWAS_VERSION=$VER
-
 PKG=rtm-gwas-$VER-$1
-
 
 TOP=$(pwd)
 

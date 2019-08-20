@@ -8,12 +8,6 @@ TEMPLATE = app
 DEFINES += QT_NO_CAST_FROM_ASCII
 DEFINES += QT_NO_CAST_TO_ASCII
 
-RTM_GWAS_VERSION = $$(RTM_GWAS_VERSION)
-isEmpty(RTM_GWAS_VERSION) {
-    RTM_GWAS_VERSION = unknown
-}
-DEFINES += RTM_GWAS_VERSION=$$RTM_GWAS_VERSION
-
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
@@ -27,8 +21,7 @@ HEADERS += \
     dialogassoc.h \
     dialoggsc.h \
     dialogsnpldb.h \
-    parameter.h \
-    version.h
+    parameter.h
 
 FORMS += \
     mainwindow.ui \

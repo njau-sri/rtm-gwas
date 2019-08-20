@@ -5,13 +5,18 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDesktopServices>
-#include "version.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "parameter.h"
 #include "dialogsnpldb.h"
 #include "dialoggsc.h"
 #include "dialogassoc.h"
+
+
+#ifndef RTM_GWAS_VERSION
+#define RTM_GWAS_VERSION  "2019.4.dev"
+#endif
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -112,7 +117,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About RTM-GWAS"),
         tr(
-    "<h3>RTM-GWAS " RTM_GWAS_VERSION_STRING " (Built on %1 at %2)</h3>"
+    "<h3>RTM-GWAS " RTM_GWAS_VERSION " (Built on %1 at %2)</h3>"
     "<p><a href=%3>%3</a></p>"
         ).arg(QLatin1String(__DATE__), QLatin1String(__TIME__),
               QLatin1String("https://github.com/njau-sri/rtm-gwas")));

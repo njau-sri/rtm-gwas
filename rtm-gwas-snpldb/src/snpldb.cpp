@@ -2,13 +2,17 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include "version.h"
 #include "cmdline.h"
 #include "vcf.h"
 #include "split.h"
 #include "util.h"
 #include "gabriel.h"
 #include "haplotype.h"
+
+
+#ifndef RTM_GWAS_VERSION
+#define RTM_GWAS_VERSION  "2019.4.dev"
+#endif
 
 
 using std::size_t;
@@ -707,7 +711,7 @@ int rtm_gwas_snpldb_fam()
 
 int rtm_gwas_snpldb(int argc, char *argv[])
 {
-    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION_STRING " SNPLDB (Built on " __DATE__ " " __TIME__ ")\n";
+    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION " SNPLDB (Built on " __DATE__ " " __TIME__ ")\n";
 
     CmdLine cmd;
 

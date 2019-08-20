@@ -1,11 +1,15 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include "version.h"
 #include "cmdline.h"
 #include "vcf.h"
 #include "lapack.h"
 #include "pheno.h"
+
+
+#ifndef RTM_GWAS_VERSION
+#define RTM_GWAS_VERSION  "2019.4.dev"
+#endif
 
 
 using std::size_t;
@@ -274,7 +278,7 @@ int eigen(const std::vector< std::vector<double> > &mat,
 
 int rtm_gwas_gsc(int argc, char *argv[])
 {
-    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION_STRING " GSC (Built on " __DATE__ " " __TIME__ ")\n";
+    std::cerr << "RTM-GWAS " RTM_GWAS_VERSION " GSC (Built on " __DATE__ " " __TIME__ ")\n";
 
     CmdLine cmd;
 
