@@ -14,13 +14,6 @@ MKLROOT  := /opt/intel/mkl
 OBJ      := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 OBJ      += $(patsubst %.c,%.o,$(wildcard src/*.c))
 
-
-ifeq ($(RTM_GWAS_VERSION),)
-RTM_GWAS_VERSION := unknown
-endif
-CXXFLAGS += -DRTM_GWAS_VERSION=$(RTM_GWAS_VERSION)
-
-
 MKLLIB := $(MKLROOT)/lib/intel64
 ifeq ($(MAKECMDGOALS),macos)
 MKLLIB := $(MKLROOT)/lib

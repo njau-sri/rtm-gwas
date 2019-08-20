@@ -1,9 +1,5 @@
 @echo off
 
-if not defined RTM_GWAS_VERSION (
-    set RTM_GWAS_VERSION=unknown
-)
-
 set /p my_target=Specify Target Platform [win32/win64]:
 
 rem Distributable Code for Visual Studio 2019

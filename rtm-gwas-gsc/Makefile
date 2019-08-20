@@ -15,11 +15,6 @@ LDLIBS   := -llapack -lblas -lgfortran -lquadmath
 OBJ := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 OBJ += $(patsubst %.c,%.o,$(wildcard src/*.c))
 
-ifeq ($(RTM_GWAS_VERSION),)
-RTM_GWAS_VERSION := unknown
-endif
-CXXFLAGS += -DRTM_GWAS_VERSION=$(RTM_GWAS_VERSION)
-
 EXE := $(TARGET)
 
 ifeq ($(MAKECMDGOALS),win32)
