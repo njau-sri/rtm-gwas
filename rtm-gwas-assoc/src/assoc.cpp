@@ -100,6 +100,9 @@ void merge(Genotype &gt, Phenotype &pt, Covariate &ct, std::vector<size_t> &gi)
         filter_ind(ci, ct);
 
     std::cerr << "INFO: there are " << ind.size() << " individuals after intersection\n";
+
+    if (gt.ind.size() - ind.size() > 50)
+        std::cerr << "WARNING: the number of common individuals is much less than genotype\n";
 }
 
 void parse_envblk(const Phenotype &pt, std::vector< std::vector<double> > &ac, std::vector< std::vector<double> > &ic)
