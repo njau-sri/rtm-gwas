@@ -235,7 +235,7 @@ int find_f(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
                 std::cerr << "ERROR: position must be in ascending order: " << pos[i] << " " << pos[j] << "\n";
                 return 1;
             }
-            if (pos[j] - pos[i] > par.maxlen)
+            if (pos[j] - pos[i] + 1 > par.maxlen)
                 break;
 
             int freq[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
@@ -269,13 +269,13 @@ int find_f(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
 
     for (size_t i = 0; i < m; ++i) {
         for (auto j = i + 1; j < m; ++j) {
-            auto dist = pos[j] - pos[i];
-            if (dist > par.maxlen)
+            auto len = pos[j] - pos[i] + 1;
+            if (len > par.maxlen)
                 break;
             if (ci[j][i] < par.llim || ci[i][j] < par.ulim)
                 continue;
             auto q = j - i + 1;
-            if ((q == 2 && dist > 20000) || (q == 3 && dist > 30000))
+            if ((q == 2 && len > 20000) || (q == 3 && len > 30000))
                 continue;
             auto frac = calc_frac_info_pair(i, j, sr, ss);
             if (frac - par.frac > g_EPS) {
@@ -285,7 +285,7 @@ int find_f(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
                 bi.frac = static_cast<short>(frac*10000);
                 bi.first = static_cast<int>(i);
                 bi.last = static_cast<int>(j);
-                bi.length = dist;
+                bi.length = len;
                 blk.push_back(bi);
             }
         }
@@ -306,7 +306,7 @@ int find_w(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
                 std::cerr << "ERROR: position must be in ascending order: " << pos[i] << " " << pos[j] << "\n";
                 return 1;
             }
-            if (pos[j] - pos[i] > par.maxlen)
+            if (pos[j] - pos[i] + 1 > par.maxlen)
                 break;
             auto wij = j - i + 1;
             if (w < wij)
@@ -325,7 +325,7 @@ int find_w(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
             auto ii = curr + i;
             for (auto j = i + 1; j < w; ++j) {
                 auto jj = curr + j;
-                if (pos[jj] - pos[ii] > par.maxlen)
+                if (pos[jj] - pos[ii] + 1 > par.maxlen)
                     break;
 
                 int freq[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
@@ -361,13 +361,13 @@ int find_w(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
             auto ii = curr + i;
             for (auto j = i + 1; j < w; ++j) {
                 auto jj = curr + j;
-                auto dist = pos[jj] - pos[ii];
-                if (dist > par.maxlen)
+                auto len = pos[jj] - pos[ii] + 1;
+                if (len > par.maxlen)
                     break;
                 if (ci[j][i] < par.llim || ci[i][j] < par.ulim)
                     continue;
                 auto q = j - i + 1;
-                if ((q == 2 && dist > 20000) || (q == 3 && dist > 30000))
+                if ((q == 2 && len > 20000) || (q == 3 && len > 30000))
                     continue;
                 auto frac = calc_frac_info_pair(i, j, sr, ss);
                 if (frac - par.frac > g_EPS) {
@@ -377,7 +377,7 @@ int find_w(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
                     bi.frac = static_cast<short>(frac*10000);
                     bi.first = static_cast<int>(ii);
                     bi.last = static_cast<int>(jj);
-                    bi.length = dist;
+                    bi.length = len;
                     blk.push_back(bi);
                 }
             }
@@ -391,8 +391,7 @@ int find_w(const BlockGabriel &par, const std::vector<int> &pos, const std::vect
         auto pos2 = pos[curr + w];
         for (size_t i = 1; i < w; ++i) {
             auto pos1 = pos[++curr];
-            auto dist = pos2 - pos1;
-            if (dist <= par.maxlen)
+            if (pos2 - pos1 + 1 <= par.maxlen)
                 break;
         }
 
@@ -417,7 +416,7 @@ int find_f_omp(const BlockGabriel &par, const std::vector<int> &pos, const std::
                 std::cerr << "ERROR: position must be in ascending order: " << pos[i] << " " << pos[j] << "\n";
                 return 1;
             }
-            if (pos[j] - pos[i] > par.maxlen)
+            if (pos[j] - pos[i] + 1 > par.maxlen)
                 break;
             pidx.emplace_back(i,j);
         }
@@ -521,7 +520,7 @@ int find_w_omp(const BlockGabriel &par, const std::vector<int> &pos, const std::
                 std::cerr << "ERROR: position must be in ascending order: " << pos[i] << " " << pos[j] << "\n";
                 return 1;
             }
-            if (pos[j] - pos[i] > par.maxlen)
+            if (pos[j] - pos[i] + 1 > par.maxlen)
                 break;
             auto wij = j - i + 1;
             if (w < wij)
@@ -543,7 +542,7 @@ int find_w_omp(const BlockGabriel &par, const std::vector<int> &pos, const std::
             auto ii = curr + i;
             for (size_t j = i + 1; j < w; ++j) {
                 auto jj = curr + j;
-                if (pos[jj] - pos[ii] > par.maxlen)
+                if (pos[jj] - pos[ii] + 1 > par.maxlen)
                     break;
                 pidx.emplace_back(i,j);
             }
@@ -645,8 +644,7 @@ int find_w_omp(const BlockGabriel &par, const std::vector<int> &pos, const std::
         auto pos2 = pos[curr + w];
         for (size_t i = 1; i < w; ++i) {
             auto pos1 = pos[++curr];
-            auto dist = pos2 - pos1;
-            if (dist <= par.maxlen)
+            if (pos2 - pos1 + 1 <= par.maxlen)
                 break;
         }
 
