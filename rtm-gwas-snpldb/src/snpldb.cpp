@@ -204,6 +204,34 @@ int read_gene(const std::string &filename, std::vector<std::string> &gene, std::
     return 0;
 }
 
+void calc_intergenic_region(const std::vector<std::string> &gene_chrom,
+                            const std::vector<int> &gene_start,
+                            const std::vector<int> &gene_stop,
+                            std::vector<std::string> &igr_chrom,
+                            std::vector<int> &igr_start,
+                            std::vector<int> &igr_stop)
+{
+    auto n = gene_chrom.size();
+    for (auto &e : stable_unique(gene_chrom)) {
+        int start = 1, stop = 1;
+        for (size_t i = 0; i < n; ++i) {
+            if (gene_chrom[i] != e)
+                continue;
+            if (gene_start[i] > start) {
+                stop = gene_start[i] - 1;
+                igr_chrom.push_back(e);
+                igr_start.push_back(start);
+                igr_stop.push_back(stop);
+            }
+            start = gene_stop[i] + 1;
+        }
+        stop = std::numeric_limits<int>::max();
+        igr_chrom.push_back(e);
+        igr_start.push_back(start);
+        igr_stop.push_back(stop);
+    }
+}
+
 std::vector< std::vector<size_t> > index_snp(const Genotype &gt, const std::vector<std::string> &chr)
 {
     auto k = chr.size();
@@ -381,17 +409,21 @@ int define_gblock(const Genotype &gt, std::vector<std::string> &name, std::vecto
     auto ng = name.size();
     auto m = gt.loc.size();
 
-    std::vector<char> ingene(m, 0);
+    std::vector<char> ignore(m, 0);
     for (size_t i = 0; i < m; ++i) {
         auto chr = gt.chr[i];
         auto pos = gt.pos[i];
         for (size_t j = 0; j < ng; ++j) {
             if (chrom[j] == chr && start[j] <= pos && stop[j] >= pos) {
-                ingene[i] = 1;
+                ignore[i] = 1;
                 break;
             }
         }
     }
+
+    std::vector<std::string> igr_chrom;
+    std::vector<int> igr_start, igr_stop;
+    calc_intergenic_region(chrom, start, stop, igr_chrom, igr_start, igr_stop);
 
     BlockGabriel gab;
     gab.maxlen = par.maxlen;
@@ -403,29 +435,36 @@ int define_gblock(const Genotype &gt, std::vector<std::string> &name, std::vecto
     auto chrid = stable_unique(gt.chr);
     auto sidx = index_snp(gt, chrid);
 
-    auto nchr = chrid.size();
-
-    for (size_t i = 0; i < nchr; ++i) {
+    for (size_t i = 0; i < chrid.size(); ++i) {
         std::cerr << "INFO: finding block on " << chrid[i] << "\n";
 
         std::string prefix = "LDB_" + chrid[i];
 
+        std::vector<int> igr_start_chr, igr_stop_chr;
+        for (size_t k = 0; k < igr_chrom.size(); ++k) {
+            if (igr_chrom[k] == chrid[i]) {
+                igr_start_chr.push_back(igr_start[k]);
+                igr_stop_chr.push_back(igr_stop[k]);
+            }
+        }
+
         std::vector<int> pos;
         std::vector< std::vector<char> > dat;
-        std::vector< std::pair<int,int> > bpos;
 
-        std::vector<size_t> idx;
-
-        for (auto &j : sidx[i]) {
-            if ( ! ingene[j] ) {
-                idx.push_back(j);
-                continue;
+        for (size_t k = 0; k < igr_start_chr.size(); ++k) {
+            std::vector<size_t> idx;
+            for (auto j : sidx[i]) {
+                if (ignore[j])
+                    continue;
+                if (gt.pos[j] >= igr_start_chr[k] && gt.pos[j] <= igr_stop_chr[k]) {
+                    idx.push_back(j);
+                    ignore[j] = 1;
+                }
             }
-
-            if ( ! idx.empty() ) {
+            if (idx.size() > 1) {
                 recode_012(gt, idx, pos, dat);
 
-                bpos.clear();
+                std::vector< std::pair<int,int> > bpos;
                 int ret = par.openmp ? find_block_omp(gab, pos, dat, bpos) :
                                        find_block(gab, pos, dat, bpos);
                 if (ret != 0)
@@ -437,25 +476,6 @@ int define_gblock(const Genotype &gt, std::vector<std::string> &name, std::vecto
                     stop.push_back(e.second);
                     name.push_back(prefix + "_" + std::to_string(e.first) + "_" + std::to_string(e.second));
                 }
-
-                idx.clear();
-            }
-        }
-
-        if ( ! idx.empty() ) {
-            recode_012(gt, idx, pos, dat);
-
-            bpos.clear();
-            int ret = par.openmp ? find_block_omp(gab, pos, dat, bpos) :
-                                   find_block(gab, pos, dat, bpos);
-            if (ret != 0)
-                return 1;
-
-            chrom.insert(chrom.end(), bpos.size(), chrid[i]);
-            for (auto &e : bpos) {
-                start.push_back(e.first);
-                stop.push_back(e.second);
-                name.push_back(prefix + "_" + std::to_string(e.first) + "_" + std::to_string(e.second));
             }
         }
     }
