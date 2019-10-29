@@ -5,19 +5,20 @@ set /p my_target=Specify Target Platform [win32/win64]:
 rem Distributable Code for Visual Studio 2019
 rem https://docs.microsoft.com/en-us/visualstudio/releases/2019/redistribution#visual-c-runtime-files
 set "VisualStudioFolder=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community"
+set "RedistVersion=14.23.27820"
 
 set my_vcvar_bat=
 
 if /i "%my_target%" == "win32" (
     rmdir /s /q Release rtm-gwas-assoc-win32
     set "my_vcvar_bat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars32.bat"
-    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\14.22.27821\x86\Microsoft.VC142.OPENMP\vcomp140.dll"
+    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x86\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
 
 if /i "%my_target%" == "win64" (
     rmdir /s /q x64 rtm-gwas-assoc-win64
     set "my_vcvar_bat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars64.bat"
-    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\14.22.27821\x64\Microsoft.VC142.OPENMP\vcomp140.dll"
+    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x64\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
 
 if "%my_vcvar_bat%" == "" (
@@ -52,4 +53,5 @@ pause
 set my_target=
 set my_vcvar_bat=
 set my_vcomp_dll=
+set RedistVersion=
 set VisualStudioFolder=
