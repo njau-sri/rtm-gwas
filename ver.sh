@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sed -i -e '1s/'"$1"'/'"$2"'/' \
+sed -i '0,/'"$1"'/s//'"$2"'/' \
 install.sh \
 rtm-gwas-snpldb/src/snpldb.cpp \
 rtm-gwas-gsc/src/gsc.cpp \
