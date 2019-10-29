@@ -8,7 +8,7 @@
 
 
 #ifndef RTM_GWAS_VERSION
-#define RTM_GWAS_VERSION  "2019.4"
+#define RTM_GWAS_VERSION  "2019.5.dev"
 #endif
 
 
