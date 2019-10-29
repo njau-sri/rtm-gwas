@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VER=2019.4.dev
+VER=2019.4
 
 PKG=rtm-gwas-$VER-$1
 
