@@ -827,8 +827,8 @@ int rtm_gwas_snpldb(int argc, char *argv[])
     }
 
     if ( blk_start.empty() ) {
-        std::cerr << "ERROR: no block could be found\n";
-        return 1;
+        std::cerr << "WARNING: no blocks could be found, no results generated\n";
+        return 0;
     }
 
     // Group SNPs within block
