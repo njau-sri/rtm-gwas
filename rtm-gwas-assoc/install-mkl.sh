@@ -12,7 +12,7 @@ if [[ $1 == "glnx64" ]]; then
 
 elif [[ $1 == "macos" ]]; then
 
-    export PATH="/usr/local/opt/llvm@7/bin:$PATH"
+    export PATH="/usr/local/opt/llvm/bin:$PATH"
 
     make -f Makefile.mkl macos || exit 1
     cp rtm-gwas-assoc $1/

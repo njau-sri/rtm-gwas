@@ -25,6 +25,7 @@ endif
 ifeq ($(MAKECMDGOALS),macos)
 CXX := clang++
 LDFLAGS := $(filter-out -s -static,$(LDFLAGS))
+LDFLAGS += -L/usr/local/lib
 endif
 
 .PHONY: all win32 win64 macos clean

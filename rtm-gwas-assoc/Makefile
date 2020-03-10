@@ -15,20 +15,16 @@ LDLIBS   := -llapack -lblas -lgfortran -lquadmath
 OBJ := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 OBJ += $(patsubst %.c,%.o,$(wildcard src/*.c))
 
-EXE := $(TARGET)
-
 ifeq ($(MAKECMDGOALS),win32)
 CC  := i686-w64-mingw32-gcc
 CXX := i686-w64-mingw32-g++
 EXE := $(addsuffix .exe,$(TARGET))
-LDLIBS := $(subst blas,refblas,$(LDLIBS))
 endif
 
 ifeq ($(MAKECMDGOALS),win64)
 CC  := x86_64-w64-mingw32-gcc
 CXX := x86_64-w64-mingw32-g++
 EXE := $(addsuffix .exe,$(TARGET))
-LDLIBS := $(subst blas,refblas,$(LDLIBS))
 endif
 
 ifeq ($(MAKECMDGOALS),macos)
@@ -36,7 +32,11 @@ CC  := clang
 CXX := clang++
 LDFLAGS := $(filter-out -s -static,$(LDFLAGS))
 LDLIBS  := -framework Accelerate
+LDFLAGS += -L/usr/local/lib
+CXXFLAGS += -I/usr/local/include
 endif
+
+EXE := $(TARGET)
 
 .PHONY: all win32 win64 macos clean
 

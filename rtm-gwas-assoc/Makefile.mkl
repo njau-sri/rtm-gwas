@@ -29,10 +29,11 @@ CC      := clang
 CXX     := clang++
 LDFLAGS := $(filter-out -s -static,$(LDFLAGS))
 LDLIBS  := $(LIB1) $(LIB2) $(LIB3)
+LDFLAGS += -L/usr/local/lib
+CXXFLAGS += -I/usr/local/include
 endif
 
 LDLIBS += -lpthread -lm -ldl
-
 
 EXE := $(TARGET)
 
