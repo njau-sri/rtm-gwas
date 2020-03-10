@@ -11,11 +11,5 @@ rtm-gwas-gui/src/mainwindow.cpp
 for e in ${a[@]}
 do
     sed -i '0,/'"$1"'/s//'"$2"'/' $e
+    sed -i 's/$/\r/' $e
 done
-
-if [[ $(uname) == *"MINGW"* || $(uname) == *"MSYS"* ]]; then
-    for e in ${a[@]}
-    do
-        sed -i 's/$/\r/' $e
-    done
-fi
