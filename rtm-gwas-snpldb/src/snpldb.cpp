@@ -8,11 +8,7 @@
 #include "util.h"
 #include "gabriel.h"
 #include "haplotype.h"
-
-
-#ifndef RTM_GWAS_VERSION
-#define RTM_GWAS_VERSION  "2019.5.dev"
-#endif
+#include "version.h"
 
 
 using std::size_t;

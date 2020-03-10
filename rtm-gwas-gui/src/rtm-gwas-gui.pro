@@ -21,7 +21,8 @@ HEADERS += \
     dialogassoc.h \
     dialoggsc.h \
     dialogsnpldb.h \
-    parameter.h
+    parameter.h \
+    version.h
 
 FORMS += \
     mainwindow.ui \

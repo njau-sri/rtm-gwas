@@ -11,11 +11,7 @@
 #include "dialogsnpldb.h"
 #include "dialoggsc.h"
 #include "dialogassoc.h"
-
-
-#ifndef RTM_GWAS_VERSION
-#define RTM_GWAS_VERSION  "2019.5.dev"
-#endif
+#include "version.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :

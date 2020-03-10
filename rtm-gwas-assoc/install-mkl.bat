@@ -5,7 +5,7 @@ set /p my_target=Specify Target Platform [win32/win64]:
 rem Distributable Code for Visual Studio 2019
 rem https://docs.microsoft.com/en-us/visualstudio/releases/2019/redistribution#visual-c-runtime-files
 set "VisualStudioFolder=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community"
-set "RedistVersion=14.23.27820"
+set "RedistVersion=14.24.28127"
 
 set my_vcvar_bat=
 

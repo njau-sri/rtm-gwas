@@ -5,11 +5,7 @@
 #include "vcf.h"
 #include "lapack.h"
 #include "pheno.h"
-
-
-#ifndef RTM_GWAS_VERSION
-#define RTM_GWAS_VERSION  "2019.5.dev"
-#endif
+#include "version.h"
 
 
 using std::size_t;

@@ -10,11 +10,7 @@
 #include "lsfit.h"
 #include "stepreg.h"
 #include "anova.h"
-
-
-#ifndef RTM_GWAS_VERSION
-#define RTM_GWAS_VERSION  "2019.5.dev"
-#endif
+#include "version.h"
 
 
 using std::ptrdiff_t;
