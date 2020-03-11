@@ -67,7 +67,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="labelGene">
         <property name="text">
-         <string>Gene:</string>
+         <string>Feature:</string>
         </property>
        </widget>
       </item>
