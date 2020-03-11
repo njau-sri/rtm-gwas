@@ -5,8 +5,11 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = rtm-gwas-gui
 TEMPLATE = app
 
+CONFIG += c++11
+
 DEFINES += QT_NO_CAST_FROM_ASCII
 DEFINES += QT_NO_CAST_TO_ASCII
+DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \

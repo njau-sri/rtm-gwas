@@ -7,6 +7,12 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    QFont font = QApplication::font();
+    if (font.defaultFamily() == QLatin1String("SimSun")) {
+        font.setFamily(QLatin1String("Microsoft YaHei"));
+        QApplication::setFont(font);
+    }
+
     Parameter::exe = QApplication::applicationDirPath();
 #ifdef Q_OS_DARWIN
     if (Parameter::exe.endsWith(QLatin1String(".app/Contents/MacOS"))) {
