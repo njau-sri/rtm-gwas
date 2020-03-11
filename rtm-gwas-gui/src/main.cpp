@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     QFont font = QApplication::font();
-    if (font.defaultFamily() == QLatin1String("SimSun")) {
+    if (font.family() == QLatin1String("SimSun")) {
         font.setFamily(QLatin1String("Microsoft YaHei"));
         QApplication::setFont(font);
     }
