@@ -112,11 +112,9 @@ void MainWindow::on_actionContents_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About RTM-GWAS"),
-        tr(
-    "<h3>RTM-GWAS " RTM_GWAS_VERSION " (Built on %1 at %2)</h3>"
-    "<p><a href=%3>%3</a></p>"
-        ).arg(QLatin1String(__DATE__), QLatin1String(__TIME__),
-              QLatin1String("https://github.com/njau-sri/rtm-gwas")));
+        tr("<h3>RTM-GWAS " RTM_GWAS_VERSION "</h3><p>Built on %1 at %2</p><p><a href=%3>%3</a></p>").arg(
+            QLatin1String(__DATE__), QLatin1String(__TIME__),
+            QLatin1String("https://github.com/njau-sri/rtm-gwas")));
 }
 
 void MainWindow::on_listWidgetFile_currentRowChanged(int currentRow)
