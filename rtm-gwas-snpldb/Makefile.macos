@@ -1,9 +1,9 @@
 TARGET = rtm-gwas-snpldb
 
-CXX := g++
+CXX := clang++
 
 CXXFLAGS := -O2 -std=c++11 -fopenmp
-LDFLAGS  := -s -fopenmp
+LDFLAGS  := -fopenmp -L/usr/local/lib
 
 OBJ := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 

@@ -1,12 +1,12 @@
 TARGET = rtm-gwas-assoc
 
-CC  := gcc
-CXX := g++
+CC  := clang
+CXX := clang++
 
 CFLAGS   := -O2 -std=c11
-CXXFLAGS := -O2 -std=c++11 -fopenmp
-LDFLAGS  := -s -fopenmp
-LDLIBS   := -llapack -lblas
+CXXFLAGS := -O2 -std=c++11 -fopenmp -I/usr/local/include
+LDFLAGS  := -fopenmp -L/usr/local/lib
+LDLIBS   := -framework Accelerate
 
 OBJ := $(patsubst %.c,%.o,$(wildcard src/*.c))
 OBJ += $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))

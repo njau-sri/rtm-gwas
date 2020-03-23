@@ -6,7 +6,7 @@ if [[ $# < 2 ]]; then
 fi
 
 a=(
-install.sh
+pkg.sh
 rtm-gwas-snpldb/src/version.h
 rtm-gwas-gsc/src/version.h
 rtm-gwas-assoc/src/version.h

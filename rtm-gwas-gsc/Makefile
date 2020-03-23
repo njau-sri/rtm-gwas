@@ -1,54 +1,19 @@
-# make
-# make win32
-# make win64
-# make macos
+TARGET = rtm-gwas-gsc
 
-TARGET   := rtm-gwas-gsc
+CC  := gcc
+CXX := g++
 
-CC       := gcc
-CXX      := g++
-CFLAGS   := -O2 -std=c11 -Wall -DNDEBUG
-CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -DNDEBUG
-LDFLAGS  := -s -static -fopenmp
-LDLIBS   := -llapack -lblas -lgfortran -lquadmath
+CFLAGS   := -O2 -std=c11
+CXXFLAGS := -O2 -std=c++11 -fopenmp
+LDFLAGS  := -s -fopenmp
+LDLIBS   := -llapack -lblas
 
-OBJ := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
-OBJ += $(patsubst %.c,%.o,$(wildcard src/*.c))
+OBJ := $(patsubst %.c,%.o,$(wildcard src/*.c))
+OBJ += $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 
-EXE := $(TARGET)
-
-ifeq ($(MAKECMDGOALS),win32)
-CC  := i686-w64-mingw32-gcc
-CXX := i686-w64-mingw32-g++
-EXE := $(addsuffix .exe,$(TARGET))
-endif
-
-ifeq ($(MAKECMDGOALS),win64)
-CC  := x86_64-w64-mingw32-gcc
-CXX := x86_64-w64-mingw32-g++
-EXE := $(addsuffix .exe,$(TARGET))
-endif
-
-ifeq ($(MAKECMDGOALS),macos)
-CC  := clang
-CXX := clang++
-LDFLAGS := $(filter-out -s -static,$(LDFLAGS))
-LDLIBS  := -framework Accelerate
-LDFLAGS += -L/usr/local/lib
-endif
-
-.PHONY: all win32 win64 macos clean
-
-all: $(EXE)
-
-$(EXE): $(OBJ)
+$(TARGET): $(OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $? $(LDLIBS)
 
-win32: all
-
-win64: all
-
-macos: all
-
+.PHONY: clean
 clean:
-	$(RM) $(OBJ) $(TARGET) $(TARGET).exe
+	$(RM) $(OBJ) $(TARGET)
