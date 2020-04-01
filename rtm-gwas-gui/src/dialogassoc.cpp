@@ -55,7 +55,7 @@ QStringList DialogAssoc::getArgs() const
         args << QLatin1String("--mtc") << ui->comboBoxMtc->currentText();
 
     if (ui->spinBoxOpenMP->value() > 0)
-        args << QLatin1String("--openmp");
+        args << QLatin1String("--thread") << ui->spinBoxOpenMP->text();
 
     if ( ! ui->checkBoxGxe->isChecked() )
         args << QLatin1String("--no-gxe");

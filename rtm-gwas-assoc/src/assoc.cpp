@@ -16,6 +16,9 @@
 using std::ptrdiff_t;
 using std::size_t;
 
+#ifdef _OPENMP
+extern "C" void omp_set_num_threads(int);
+#endif // _OPENMP
 
 namespace {
 
@@ -30,8 +33,8 @@ struct Parameter
     double alpha = 0.01;
     double preselect = 0.05;
     int mtc = 0;
+    int thread = 0;
     bool nogxe = false;
-    bool openmp = false;
 } par ;
 
 
@@ -486,7 +489,7 @@ int assoc_stepwise(const Genotype &gt, const std::vector<size_t> &gi, const std:
 
     std::vector<double> px;
 
-    if ( par.openmp )
+    if (par.thread > 0)
         sr.forward_omp(x0, x1, c1, y, px, in);
     else
         sr.forward(x0, x1, c1, y, px, in);
@@ -622,9 +625,9 @@ int rtm_gwas_assoc(int argc, char *argv[])
     cmd.add("--preselect", "pre-selection threshold", "0.05");
     cmd.add("--mtc", "multiple testing correction, BON/FDR", "");
     cmd.add("--rsq", "maximum model r-square", "0.95");
+    cmd.add("--thread", "set the number of threads", "0");
 
     cmd.add("--no-gxe", "ignore GxE interaction effect");
-    cmd.add("--openmp", "enable OpenMP multithreading");
 
     cmd.parse(argc, argv);
 
@@ -640,9 +643,9 @@ int rtm_gwas_assoc(int argc, char *argv[])
     par.alpha = std::stod(cmd.get("--alpha"));
     par.preselect = std::stod(cmd.get("--preselect"));
     par.rsq = std::stod(cmd.get("--rsq"));
+    par.thread = std::stoi(cmd.get("--thread"));
 
     par.nogxe = cmd.has("--no-gxe");
-    par.openmp = cmd.has("--openmp");
 
     if ( ! cmd.get("--mtc").empty() ) {
         auto mtc = cmd.get("--mtc");
@@ -656,6 +659,11 @@ int rtm_gwas_assoc(int argc, char *argv[])
         else
             par.mtc = 1;
     }
+
+#ifdef _OPENMP
+    if (par.thread > 0)
+        omp_set_num_threads(par.thread);
+#endif // _OPENMP
 
     Genotype gt;
     Phenotype pt;
@@ -748,7 +756,7 @@ int rtm_gwas_assoc(int argc, char *argv[])
             assoc_stepwise(gt, gi2, y, ac2, ic2, p1, loc);
         else {
             std::vector< std::vector<double> > glm;
-            if ( par.openmp )
+            if (par.thread > 0)
                 assoc_glm_omp(gt, gi2, y, ac2, ic2, glm);
             else
                 assoc_glm(gt, gi2, y, ac2, ic2, glm);

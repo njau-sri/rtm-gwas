@@ -10,6 +10,9 @@
 
 using std::size_t;
 
+#ifdef _OPENMP
+extern "C" void omp_set_num_threads(int);
+#endif // _OPENMP
 
 namespace {
 
@@ -20,7 +23,7 @@ struct Parameter
     std::string grm;
     std::string out;
     int top = 10;
-    bool openmp = false;
+    int thread = 0;
 } par;
 
 
@@ -282,7 +285,7 @@ int rtm_gwas_gsc(int argc, char *argv[])
     cmd.add("--grm", "genetic relationship matrix file", "");
     cmd.add("--out", "output file", "gsc.out");
     cmd.add("--top", "number of eigenvectors", "10");
-    cmd.add("--openmp", "enable OpenMP multithreading");
+    cmd.add("--thread", "set the number of threads", "0");
 
     cmd.parse(argc, argv);
 
@@ -295,7 +298,12 @@ int rtm_gwas_gsc(int argc, char *argv[])
     par.grm = cmd.get("--grm");
     par.out = cmd.get("--out");
     par.top = std::stoi(cmd.get("--top"));
-    par.openmp = cmd.has("--openmp");
+    par.thread = std::stoi(cmd.get("--thread"));
+
+#ifdef _OPENMP
+    if (par.omp > 0)
+        omp_set_num_threads(par.omp);
+#endif // _OPENMP
 
     Genotype gt;
     SquareData sd;
@@ -306,7 +314,7 @@ int rtm_gwas_gsc(int argc, char *argv[])
             return 1;
         std::cerr << "INFO: " << gt.ind.size() << " individuals, " << gt.loc.size() << " loci\n";
 
-        if ( par.openmp )
+        if (par.thread > 0)
             calc_gsc_matrix_omp(gt, sd.dat);
         else
             calc_gsc_matrix(gt, sd.dat);

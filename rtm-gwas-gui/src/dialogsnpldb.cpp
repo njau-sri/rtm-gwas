@@ -64,7 +64,7 @@ QStringList DialogSNPLDB::getArgs() const
         args << QLatin1String("--inform") << ui->lineEditInform->text();
 
     if (ui->spinBoxOpenMP->value() > 0)
-        args << QLatin1String("--openmp");
+        args << QLatin1String("--thread") << ui->spinBoxOpenMP->text();
 
     QString prefix = QLatin1String("snpldb.out.");
     prefix += QDateTime::currentDateTime().toString(QLatin1String("yyMMdd_hhmmsszzz"));

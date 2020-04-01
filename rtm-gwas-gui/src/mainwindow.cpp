@@ -244,12 +244,6 @@ void MainWindow::startProcess(const QString &prog, const QStringList &args)
     args_ = args;
     proc_->setWorkingDirectory(Parameter::work);
 
-    if (Parameter::openmp > 0) {
-        QStringList env = QProcess::systemEnvironment();
-        env << QString(QLatin1String("OMP_NUM_THREADS=%1")).arg(Parameter::openmp);
-        proc_->setEnvironment(env);
-    }
-
     proc_->start(prog, args);
     if ( ! proc_->waitForStarted() ) {
         QMessageBox::critical(this, tr("ERROR"), tr("Can't start process: %1").arg(prog));

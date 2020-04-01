@@ -13,6 +13,9 @@
 
 using std::size_t;
 
+#ifdef _OPENMP
+extern "C" void omp_set_num_threads(int);
+#endif // _OPENMP
 
 namespace {
 
@@ -30,7 +33,7 @@ struct Parameter
     int llim = 70;
     int ulim = 98;
     int recomb = 90;
-    bool openmp = false;
+    int thread = 0;
 } par ;
 
 
@@ -384,8 +387,8 @@ int define_block(const Genotype &gt, std::vector<std::string> &chrom, std::vecto
 
         std::vector< std::pair<int,int> > bpos;
 
-        int ret = par.openmp ? find_block_omp(gab, pos, dat, bpos) :
-                               find_block(gab, pos, dat, bpos);
+        int ret = par.thread > 0 ? find_block_omp(gab, pos, dat, bpos) :
+                                   find_block(gab, pos, dat, bpos);
         if (ret != 0)
             return 1;
 
@@ -461,8 +464,8 @@ int define_gblock(const Genotype &gt, std::vector<std::string> &name, std::vecto
                 recode_012(gt, idx, pos, dat);
 
                 std::vector< std::pair<int,int> > bpos;
-                int ret = par.openmp ? find_block_omp(gab, pos, dat, bpos) :
-                                       find_block(gab, pos, dat, bpos);
+                int ret = par.thread > 0 ? find_block_omp(gab, pos, dat, bpos) :
+                                           find_block(gab, pos, dat, bpos);
                 if (ret != 0)
                     return 1;
 
@@ -745,7 +748,7 @@ int rtm_gwas_snpldb(int argc, char *argv[])
 
     cmd.add("--fam", "sample sizes in RIL/NAM, n1,n2,n3,...", "");
 
-    cmd.add("--openmp", "enable OpenMP multithreading");
+    cmd.add("--thread", "set the number of threads", "0");
 
     cmd.parse(argc, argv);
 
@@ -769,7 +772,12 @@ int rtm_gwas_snpldb(int argc, char *argv[])
 
     par.fam = cmd.get("--fam");
 
-    par.openmp = cmd.has("--openmp");
+    par.thread = std::stoi(cmd.get("--thread"));
+
+#ifdef _OPENMP
+    if (par.omp > 0)
+        omp_set_num_threads(par.omp);
+#endif // _OPENMP
 
     if ( ! par.fam.empty() )
         return rtm_gwas_snpldb_fam();
