@@ -38,9 +38,10 @@ elif [[ $1 == lnx64 ]]; then
 
     LDFLAGS="$LDFLAGS -s -static"
 
-    MKL1=/opt/intel/mkl/lib/intel64/libmkl_intel_lp64.a
-    MKL2=/opt/intel/mkl/lib/intel64/libmkl_sequential.a
-    MKL3=/opt/intel/mkl/lib/intel64/libmkl_core.a
+    MKLDIR=/opt/intel/mkl/lib/intel64
+    MKL1=$MKLDIR/libmkl_intel_lp64.a
+    MKL2=$MKLDIR/libmkl_sequential.a
+    MKL3=$MKLDIR/libmkl_core.a
     MKL="-Wl,--start-group $MKL1 $MKL2 $MKL3 -Wl,--end-group -lpthread -lm -ldl"
 
 elif [[ $1 == macos ]]; then
@@ -57,9 +58,10 @@ elif [[ $1 == macos ]]; then
 
     LAPACK="-framework Accelerate"
 
-    MKL1=/opt/intel/mkl/lib/libmkl_intel_lp64.a
-    MKL2=/opt/intel/mkl/lib/libmkl_sequential.a
-    MKL3=/opt/intel/mkl/lib/libmkl_core.a
+    MKLDIR=/opt/intel/mkl/lib
+    MKL1=$MKLDIR/libmkl_intel_lp64.a
+    MKL2=$MKLDIR/libmkl_sequential.a
+    MKL3=$MKLDIR/libmkl_core.a
     MKL="$MKL1 $MKL2 $MKL3 -lpthread -lm -ldl"
 
 else
