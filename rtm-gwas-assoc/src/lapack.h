@@ -44,6 +44,9 @@ extern "C" {
     int call_dgelsy(bint m, bint n, bint nrhs, double *a, bint lda, double *b, bint ldb,
                     bint *jpvt, double rcond, bint *rank);
 
+    int call_dgelsd(bint m, bint n, bint nrhs, double *a, bint lda, double *b, bint ldb,
+                    double *s, double rcond, bint *rank);
+
     int call_dgeqrf(bint m, bint n, double *a, bint lda, double *tau);
 
     int call_dgeqp3(bint m, bint n, double *a, bint lda, bint *jpvt, double *tau);
@@ -51,6 +54,8 @@ extern "C" {
     int call_dorgqr(bint m, bint n, bint k, double *a, bint lda, const double *tau);
 
     int call_dpotrf(char uplo, bint n, double *a, bint lda);
+
+    int call_dsyev(char jobz, char uplo, bint n, double *a, bint lda, double *w);
 
     int call_dsyevr(char jobz, char range, char uplo, bint n, double *a, bint lda, double vl,
                     double vu, bint il, bint iu, double abstol, bint *m, double *w,
@@ -65,6 +70,13 @@ extern "C" {
 
     double call_dlansy(char norm, char uplo, bint n, const double *a, bint lda);
 
+    double call_dlange(char norm, bint m, bint n, const double *a, bint lda);
+
+    int call_dgesvd(char jobu, char jobvt, bint m, bint n, double *a, bint lda, double *s,
+                    double *u, bint ldu, double *vt, bint ldvt);
+
+    int call_dgesdd(char jobz, bint m, bint n, double *a, bint lda, double *s,
+                    double *u, bint ldu, double *vt, bint ldvt);
 
     // Symmetric Matrix Inverse
     //

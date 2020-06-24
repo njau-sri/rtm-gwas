@@ -1,7 +1,7 @@
 #include <iostream>
 #include <exception>
 
-int rtm_gwas_gsc(int argc, char *argv[]);
+#include "rtmgwasgsc.h"
 
 int main(int argc, char *argv[])
 {

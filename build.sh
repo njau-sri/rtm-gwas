@@ -35,11 +35,11 @@ elif [[ $(uname -o) == *Msys* ]]; then
 fi
 
 cd rtm-gwas-gui
-$QMAKE src || exit 1
+$QMAKE || exit 1
 if [[ -f Makefile.Release ]]; then
     $MAKE release || exit 1
     mv -v release/rtm-gwas-gui ../bin
 else
-    $MAKE -C rtm-gwas-gui || exit 1
+    $MAKE || exit 1
     mv -v rtm-gwas-gui ../bin
 fi

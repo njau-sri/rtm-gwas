@@ -8,11 +8,9 @@ class CmdLine
 {
 public:
 
-    void add(const std::string &arg, const std::string &msg);
+    void add(const std::string &arg);
 
-    void add(const std::string &arg, const std::string &msg, const std::string &val);
-
-    void show() const;
+    void add(const std::string &arg, const std::string &val);
 
     void parse(int argc, char *argv[]);
 
@@ -25,10 +23,7 @@ private:
 
 private:
     std::map<std::string, std::string> arg_;
-    std::map<std::string, std::string> arg_msg_;
     std::map<std::string, bool> flag_;
-    std::map<std::string, std::string> flag_msg_;
-    std::string usage_;
 };
 
 #endif // CMDLINE_H

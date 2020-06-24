@@ -1,11 +1,13 @@
 #include <QDir>
 #include <QApplication>
-#include "mainwindow.h"
-#include "parameter.h"
 
-int main(int argc, char *argv[])
+#include "parameter.h"
+#include "mainwindow.h"
+
+namespace {
+
+void handle_high_dpi_scaling()
 {
-    // handle high DPI scaling
 #ifndef Q_OS_DARWIN
 #if QT_VERSION >= QT_VERSION_CHECK(5,6,0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -14,10 +16,10 @@ int main(int argc, char *argv[])
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
 #endif
 #endif // Q_OS_DARWIN
+}
 
-    QApplication a(argc, argv);
-
-    // tweak font for zh-CN
+void tweak_font()
+{
 #ifdef Q_OS_WIN
     QFont font = QApplication::font();
     if (font.family() == QLatin1String("SimSun")) {
@@ -25,32 +27,59 @@ int main(int argc, char *argv[])
         QApplication::setFont(font);
     }
 #endif // Q_OS_WIN
+}
 
-    // set kernel path
-    Parameter::exe = QApplication::applicationDirPath();
+void set_bin_path()
+{
+    par->bin_path = QApplication::applicationDirPath();
+
 #ifdef Q_OS_DARWIN
-    if (Parameter::exe.endsWith(QLatin1String(".app/Contents/MacOS"))) {
-        QDir exe(Parameter::exe);
-        exe.cdUp();
-        exe.cdUp();
-        exe.cdUp();
-        Parameter::exe = exe.absolutePath();
+    if (par->bin_path.endsWith(".app/Contents/MacOS")) {
+        QDir dir(par->bin_path);
+        dir.cdUp();
+        dir.cdUp();
+        dir.cdUp();
+        par->bin_path = dir.absolutePath();
     }
 #endif // Q_OS_DARWIN
+}
 
-    // set working directory
-    QDir home = QDir::home();
+void set_working_directory()
+{
+    QDir dir = QDir::home();
 #ifdef Q_OS_WIN
-    home.cd(QLatin1String("Documents"));
+    dir.cd("Documents");
 #endif
-    home.mkdir(QLatin1String("RTM-GWAS"));
-    home.cd(QLatin1String("RTM-GWAS"));
+    dir.mkdir("RTM-GWAS");
+    dir.cd("RTM-GWAS");
 
-    Parameter::work = home.absolutePath();
-    Parameter::open = Parameter::work;
-    QDir::setCurrent(Parameter::work);
+    par->working_directory = dir.absolutePath();
+    par->file_dialog_directory = dir.absolutePath();
+}
+
+} // namespace
+
+Parameter *par = nullptr;
+
+int main(int argc, char *argv[])
+{
+    handle_high_dpi_scaling();
+
+    QApplication a(argc, argv);
+
+    Parameter parameter;
+    par = &parameter;
+    par->txt_size = 1;
+    par->log_size = 1000;
+
+    tweak_font();
+
+    set_bin_path();
+
+    set_working_directory();
 
     MainWindow w;
+    w.resize(800, 600);
     w.show();
 
     return a.exec();

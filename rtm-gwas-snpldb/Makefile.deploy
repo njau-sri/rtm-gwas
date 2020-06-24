@@ -1,0 +1,65 @@
+# Host          Target
+# --------------------------
+# CentOS 7      lnx64
+# Fedora 30     win32, win64
+# macOS 10.14   macos
+
+TARGET = rtm-gwas-snpldb
+
+RTM_GWAS_VERSION ?= $(shell cat ../VERSION)
+DEFINES  := -DRTM_GWAS_VERSION=\"$(RTM_GWAS_VERSION)\"
+
+CC       := gcc
+CXX      := g++
+
+CFLAGS   := -O2 -std=c11 -fopenmp -Wall -DNDEBUG
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -DNDEBUG $(DEFINES)
+LDFLAGS  := -s -static -fopenmp
+LDLIBS   :=
+
+OBJ      := $(patsubst %.c,%.o,$(wildcard src/*.c))
+OBJ      += $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
+
+EXE      := $(TARGET)
+
+ifeq ($(MAKECMDGOALS),macos)
+CC       := clang
+CXX      := clang++
+CXXFLAGS += -I/usr/local/include
+LDFLAGS  := -fopenmp -L/usr/local/lib
+endif
+
+ifeq ($(MAKECMDGOALS),win32)
+CC       := i686-w64-mingw32-gcc
+CXX      := i686-w64-mingw32-g++
+EXE      := $(addsuffix .exe,$(TARGET))
+endif
+
+ifeq ($(MAKECMDGOALS),win64)
+CC       := x86_64-w64-mingw32-gcc
+CXX      := x86_64-w64-mingw32-g++
+EXE      := $(addsuffix .exe,$(TARGET))
+endif
+
+.PHONY: all lnx64 macos win32 win64 clean
+
+all:
+	@echo "make lnx64"
+	@echo "make macos"
+	@echo "make win32"
+	@echo "make win64"
+	@echo "make clean"
+
+$(EXE): $(OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+lnx64: $(EXE)
+
+macos: $(EXE)
+
+win32: $(EXE)
+
+win64: $(EXE)
+
+clean:
+	$(RM) $(OBJ) $(TARGET) $(TARGET).exe

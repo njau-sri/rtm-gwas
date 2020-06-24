@@ -5,49 +5,41 @@
 #include <string>
 #include <vector>
 
-
 class ANOVA
 {
 public:
 
-    // ANOVA Table
-    //
-    //   src    source names
-    //   df     degrees of freedom
-    //   ss     sum of squares
-    //   ms     mean squares
-    //   f      F value
-    //   p      Pr > F
-    //   error  the error info, containing dfe, sse, mse
-    //   total  the total info, containing dft, sst
-    //
     struct Table
     {
-        std::vector<std::string> src;
-        std::vector<double> df;
-        std::vector<double> ss;
-        std::vector<double> ms;
-        std::vector<double> f;
-        std::vector<double> p;
-        std::vector<double> error;
-        std::vector<double> total;
+        std::vector<std::string> src;   // model term names
+        std::vector<double> df;         // degrees of freedom
+        std::vector<double> ss;         // sum of squares
+        std::vector<double> ms;         // mean squares
+        std::vector<double> f;          // F value
+        std::vector<double> p;          // Pr > F
+        std::vector<double> error;      // dfe, sse, mse
+        std::vector<double> total;      // dfe, sst
         std::string to_string() const;
     };
 
-    // Parameter Estimates
-    //
-    //   par  parameter names
-    //   est  parameter estimates
-    //
     struct Solution
     {
-        std::vector<std::string> par;
-        std::vector<double> est;
+        std::vector<std::string> par;   // names
+        std::vector<double> est;        // estimates
         std::string to_string() const;
     };
 
-
 public:
+    // std::unique_ptr with incomplete type
+    // https://en.cppreference.com/w/cpp/language/pimpl
+    // https://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile
+    ANOVA();
+    ~ANOVA();
+
+    ANOVA(ANOVA&&) = delete;
+    ANOVA(const ANOVA&) = delete;
+    ANOVA& operator=(ANOVA&&) = delete;
+    ANOVA& operator=(const ANOVA&) = delete;
 
     // Add regression effect, X
     void add_reg(const std::string &name, const std::vector<double> &x);
@@ -70,28 +62,11 @@ public:
     // Parameter estimates
     Solution solution(const std::vector<double> &y) const;
 
+    Solution solution_wtsum(const std::vector<double> &y) const;
 
 private:
-
-    // Model Term
-    //
-    //   name   term name
-    //   par    parameter names
-    //   dat    design matrix
-    //   contr  contrasts
-    //
-    struct Term
-    {
-        std::string name;
-        std::vector<std::string> par;
-        std::vector< std::vector<double> > dat;
-        std::vector< std::vector<double> > contr;
-    };
-
-private:
-
-    std::vector< std::shared_ptr<Term> > tms_;
+    struct Term;
+    std::vector< std::unique_ptr<Term> > tms_;
 };
-
 
 #endif // ANOVA_H

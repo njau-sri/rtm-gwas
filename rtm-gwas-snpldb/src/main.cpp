@@ -1,7 +1,7 @@
 #include <iostream>
 #include <exception>
 
-int rtm_gwas_snpldb(int argc, char *argv[]);
+#include "rtmgwassnpldb.h"
 
 int main(int argc, char *argv[])
 {

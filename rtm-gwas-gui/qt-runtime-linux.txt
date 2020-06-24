@@ -1,0 +1,7 @@
+Ubuntu
+
+    sudo apt install libqt5widgets5
+
+Fedora
+
+    sudo yum install qt5-qtbase-gui

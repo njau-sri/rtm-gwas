@@ -1,211 +1,218 @@
-#include <limits>
-#include <sstream>
-#include <algorithm>
-#include <functional>
 #include "anova.h"
-#include "statsutil.h"
-#include "lsfit.h"
 
+#include "print.h"
+#include "statutil.h"
+#include "vectorutil.h"
+#include "matrix.h"
+#include "lmfit.h"
 
-using std::size_t;
-
-
-namespace {
-
-
-template<typename T1, typename T2>
-std::vector<T1> subset(const std::vector<T1> &vec, const std::vector<T2> &idx)
+struct ANOVA::Term
 {
-    std::vector<T1> out;
+    std::string name;                // term name
+    std::vector<std::string> param;  // parameter names
+    mat dat;                         // design matrix
+    mat constr;                      // sum to zero constraints
+    mat constr_wt;                   // weighted sum to zero constraints
+};
 
-    out.reserve(idx.size());
-
-    for (auto i : idx)
-        out.push_back(vec[i]);
-
-    return out;
-}
-
-
-} // namespace
-
+ANOVA::ANOVA() = default;
+ANOVA::~ANOVA() = default;
 
 void ANOVA::add_reg(const std::string &name, const std::vector<double> &x)
 {
-    auto tm = std::make_shared<Term>();
-    tm->name = name;
-    tm->par.push_back(name);
-    tm->dat.push_back(x);
-    tms_.push_back(tm);
+    tms_.emplace_back(new Term);
+    auto &ptr = tms_.back();
+
+    ptr->name = name;
+    ptr->param.push_back(name);
+    ptr->dat = mat::Map(x.data(), length(x), 1);
 }
 
 void ANOVA::add_main(const std::string &name, const std::vector<std::string> &a)
 {
-    std::vector<int> gi;
+    tms_.emplace_back(new Term);
+    auto &ptr = tms_.back();
+
+    std::vector<isize_t> gi;
     std::vector<std::string> gn;
-    factor(a, gn, gi);
+    grpidx(a, gi, gn);
 
-    std::vector< std::vector<double> > x;
-    idummy3(gi, x);
+    design3(length(gi), gi.data(), ptr->dat);
 
-    auto tm = std::make_shared<Term>();
-    tm->name = name;
+    ptr->name = name;
     for (auto &e : gn)
-        tm->par.push_back(name + " " + e);
-    tm->contr.emplace_back(gn.size(), 1.0);
-    tm->dat.swap(x);
-    tms_.push_back(tm);
+        ptr->param.push_back(name + " " + e);
+
+    ptr->constr.setOnes(1, length(gn));
+    ptr->constr_wt = ptr->dat.colwise().mean();
 }
 
 void ANOVA::add_crossed(const std::string &name, const std::vector<std::string> &a, const std::vector<std::string> &b)
 {
-    std::vector<int> gia;
+    tms_.emplace_back(new Term);
+    auto &ptr = tms_.back();
+
+    std::vector<isize_t> gia;
     std::vector<std::string> gna;
-    factor(a, gna, gia);
+    grpidx(a, gia, gna);
 
-    std::vector<int> gib;
+    std::vector<isize_t> gib;
     std::vector<std::string> gnb;
-    factor(b, gnb, gib);
+    grpidx(b, gib, gnb);
 
-    std::vector< std::vector<double> > xa;
-    idummy3(gia, xa);
+    mat xa, xb;
+    design3(length(gia), gia.data(), xa);
+    design3(length(gib), gib.data(), xb);
 
-    std::vector< std::vector<double> > xb;
-    idummy3(gib, xb);
+    ptr->name = name;
 
-    auto tm = std::make_shared<Term>();
-    tm->name = name;
+    isize_t na = length(gna);
+    isize_t nb = length(gnb);
 
-    auto na = gna.size();
-    auto nb = gnb.size();
+    ptr->dat.resize(length(a), na*nb);
+    ptr->constr.setZero(na+nb, na*nb);
+    ptr->constr_wt.setZero(na+nb, na*nb);
 
-    // A1*B1 A1*B2 A1*B3, A2*B1 A2*B2 A2*B3
-    for (size_t i = 0; i < na; ++i) {
-        for (size_t j = 0; j < nb; ++j) {
-            tm->par.push_back(name + " " + gna[i] + "*" + gnb[j]);
-            auto v = xb[j];
-            std::transform(v.begin(), v.end(), xa[i].begin(), v.begin(), std::multiplies<double>());
-            tm->dat.push_back(v);
+    // A * B : A1B1 A1B2 A1B3 A2B1 A2B2 A2B3
+    for (isize_t i = 0, k = 0; i < na; ++i) {
+        for (isize_t j = 0; j < nb; ++j) {
+            ptr->param.push_back(name + " " + gna[i] + "*" + gnb[j]);
+            ptr->dat.col(k) = xa.col(i).cwiseProduct(xb.col(j));
+            ++k;
         }
     }
 
-    // zero-sum constraints for A
-    for (size_t j = 0; j < nb; ++j) {
-        std::vector<double> v(na*nb, 0);
-        for (size_t i = 0; i < na; ++i)
-            v[i*nb+j] = 1.0;
-        tm->contr.push_back(v);
+    isize_t k = 0;
+    mat z = ptr->dat.colwise().mean();
+
+    // constraints for A
+    for (isize_t j = 0; j < nb; ++j) {
+        for (isize_t i = 0; i < na; ++i)
+            ptr->constr(k, i*nb+j) = 1.0;
+        for (isize_t i = 0; i < na; ++i)
+            ptr->constr_wt(k, i*nb+j) = z(i*nb+j);
+        ++k;
     }
 
-    // zero-sum constraints for B
-    for (size_t i = 0; i < na; ++i) {
-        std::vector<double> v(na*nb, 0);
-        std::fill_n(&v[i*nb], nb, 1.0);
-        tm->contr.push_back(v);
+    // constraints for B
+    for (isize_t i = 0; i < na; ++i) {
+        ptr->constr.row(k).segment(i*nb, nb).setOnes();
+        ptr->constr_wt.row(k).segment(i*nb, nb) = z;
+        ++k;
     }
-
-    tms_.push_back(tm);
 }
 
 void ANOVA::add_nested(const std::string &name, const std::vector<std::string> &a, const std::vector<std::string> &b)
 {
-    std::vector<int> gia;
+    tms_.emplace_back(new Term);
+    auto &ptr = tms_.back();
+
+    std::vector<isize_t> gia;
     std::vector<std::string> gna;
-    factor(a, gna, gia);
+    grpidx(a, gia, gna);
 
-    std::vector<int> gib;
+    std::vector<isize_t> gib;
     std::vector<std::string> gnb;
-    factor(b, gnb, gib);
+    grpidx(b, gib, gnb);
 
-    std::vector< std::vector<double> > xa;
-    idummy3(gia, xa);
+    mat xa, xb;
+    design3(length(gia), gia.data(), xa);
+    design3(length(gib), gib.data(), xb);
 
-    std::vector< std::vector<double> > xb;
-    idummy3(gib, xb);
+    ptr->name = name;
 
-    auto tm = std::make_shared<Term>();
-    tm->name = name;
+    isize_t na = length(gna);
+    isize_t nb = length(gnb);
 
-    auto na = gna.size();
-    auto nb = gnb.size();
+    ptr->dat.resize(length(a), na*nb);
+    ptr->constr.setZero(nb, na*nb);
+    ptr->constr_wt.setZero(nb, na*nb);
 
-    // A1(B1) A2(B1) A3(B1), A1(B2) A2(B2) A3(B2)
-    for (size_t i = 0; i < nb; ++i) {
-        for (size_t j = 0; j < na; ++j) {
-            tm->par.push_back(name + " " + gna[j] + "(" + gnb[i] + ")");
-            auto v = xa[j];
-            std::transform(v.begin(), v.end(), xb[i].begin(), v.begin(), std::multiplies<double>());
-            tm->dat.push_back(v);
+    // A (B) : A1B1 A2B1 A3B1 A1B2 A2B2 A3B2
+    for (isize_t j = 0, k = 0; j < nb; ++j) {
+        for (isize_t i = 0; i < na; ++i) {
+            ptr->param.push_back(name + " " + gna[i] + "(" + gnb[j] + ")");
+            ptr->dat.col(k) = xa.col(i).cwiseProduct(xb.col(j));
+            ++k;
         }
-        // zero-sum constraints for A
-        std::vector<double> v(na*nb, 0);
-        std::fill_n(&v[i*na], na, 1.0);
-        tm->contr.push_back(v);
     }
 
-    auto m = tm->dat.size();
-    std::vector<size_t> idx;
+    mat z = ptr->dat.colwise().mean();
 
-    for (size_t i = 0; i < m; ++i) {
-        for (auto e : tm->dat[i]) {
-            if (static_cast<int>(e) != 0) {
-                idx.push_back(i);
-                break;
+    // constraints for A
+    for (isize_t j = 0; j < nb; ++j) {
+        ptr->constr.row(j).segment(j*na, na).setOnes();
+        ptr->constr_wt.row(j).segment(j*na, na) = z;
+    }
+
+    std::vector<isize_t> idx;
+    isize_t n = ncol(ptr->dat);
+    for (isize_t j = 0; j < n; ++j)
+        if ((ptr->dat.col(j).array() != 0.0).any())
+            idx.push_back(j);
+
+    isize_t n1 = length(idx);
+    if (n1 < n) {
+        for (isize_t j = 0; j < n1; ++j) {
+            isize_t jj = idx[j];
+            if (jj != j) {
+                ptr->dat.col(j) = ptr->dat.col(jj);
+                ptr->constr.col(j) = ptr->constr.col(jj);
+                ptr->constr_wt.col(j) = ptr->constr_wt.col(jj);
             }
         }
+        ptr->dat.conservativeResize(Eigen::NoChange, n1);
+        ptr->constr.conservativeResize(Eigen::NoChange, n1);
+        ptr->constr_wt.conservativeResize(Eigen::NoChange, n1);
     }
 
-    subset(tm->par,idx).swap(tm->par);
-    subset(tm->dat,idx).swap(tm->dat);
-    for (auto &v : tm->contr)
-        subset(v,idx).swap(v);
-
-    tms_.push_back(tm);
+    subset(ptr->param, idx).swap(ptr->param);
 }
 
 ANOVA::Table ANOVA::solve1(const std::vector<double> &y) const
 {
-    auto n = y.size();
-
     Table tbl;
-    std::vector<double> x;
 
-    size_t q0 = 1;
-    x.assign(n, 1);
+    isize_t n = length(y);
+    
+    double dfe = n - 1.0;
+    double sse = css(n, y.data());
 
-    double dfe0 = n - 1;
-    double sse0 = calc_css(y);
+    tbl.total.push_back(dfe);
+    tbl.total.push_back(sse);
 
-    tbl.total.push_back(dfe0);
-    tbl.total.push_back(sse0);
+    isize_t p = 1;
+    for (auto &ptr : tms_)
+        p += ncol(ptr->dat);
 
-    for (auto &tm : tms_) {
-        auto q1 = q0 + tm->dat.size();
-        for (auto &e : tm->dat)
-            x.insert(x.end(), e.begin(), e.end());
+    mat x = mat::Zero(n, p);
+    x.col(0).setOnes();
 
-        double dfe1, sse1;
-        std::vector<double> b1;
-        lsfit(y, x, b1, dfe1, sse1);
+    p = 1;
+    for (auto &ptr : tms_) {
+        x.middleCols(p, ncol(ptr->dat)) = ptr->dat;
+        p += ncol(ptr->dat);
 
-        tbl.src.push_back(tm->name);
-        tbl.df.push_back(dfe0 - dfe1);
-        tbl.ss.push_back(sse0 - sse1);
+        LmFit lm;
+        lmfit(n, p, y.data(), x.data(), &lm);
 
-        q0 = q1;
-        dfe0 = dfe1;
-        sse0 = sse1;
+        tbl.src.push_back(ptr->name);
+        tbl.df.push_back(dfe - lm.dfe);
+        tbl.ss.push_back(sse - lm.sse);
+
+        dfe = lm.dfe;
+        sse = lm.sse;
     }
 
-    tbl.error.push_back(dfe0);
-    tbl.error.push_back(sse0);
-    tbl.error.push_back(sse0 / dfe0);
+    tbl.error.push_back(dfe);
+    tbl.error.push_back(sse);
+    tbl.error.push_back(sse / dfe);
 
-    auto m = tms_.size();
-    tbl.ms.resize(m);
-    tbl.f.resize(m);
-    tbl.p.assign(m, std::numeric_limits<double>::quiet_NaN());
-    for (size_t j = 0; j < m; ++j) {
+    isize_t nterms = length(tms_);
+    tbl.ms.resize(nterms);
+    tbl.f.resize(nterms);
+    tbl.p.assign(nterms, std::numeric_limits<double>::quiet_NaN());
+    for (isize_t j = 0; j < nterms; ++j) {
         tbl.ms[j] = tbl.ss[j] / tbl.df[j];
         tbl.f[j] = tbl.ms[j] / tbl.error[2];
         if (tbl.df[j] > 0.0 && tbl.ss[j] > 0.0)
@@ -217,87 +224,108 @@ ANOVA::Table ANOVA::solve1(const std::vector<double> &y) const
 
 ANOVA::Table ANOVA::solve3(const std::vector<double> &y) const
 {
-    auto n = y.size();
-
     Table tbl;
-    std::vector<double> x;
 
-    size_t q1 = 1;
-    x.assign(n, 1);
+    isize_t n = length(y);
 
-    double dft = n - 1;
-    double sst = calc_css(y);
+    double dft = n - 1.0;
+    double sst = css(n, y.data());
 
     tbl.total.push_back(dft);
     tbl.total.push_back(sst);
 
-    for (auto &tm : tms_) {
-        q1 += tm->dat.size();
-        for (auto &e : tm->dat)
-            x.insert(x.end(), e.begin(), e.end());
+    isize_t p = 1;
+    isize_t q = 0;
+    for (auto &ptr : tms_) {
+        p += ncol(ptr->dat);
+        q += nrow(ptr->constr);
     }
 
-    std::vector<double> zt;
-    int pos = 1, nz = 0;
-    for (auto &tm : tms_) {
-        for (auto &e : tm->contr) {
-            std::vector<double> v(q1, 0);
-            std::copy(e.begin(), e.end(), v.begin() + pos);
-            zt.insert(zt.end(), v.begin(), v.end());
-            nz += 1;
-        }
-        pos += tm->dat.size();
+    mat x(n, p);
+    x.col(0).setOnes();
+    p = 1;
+    for (auto &ptr : tms_) {
+        x.middleCols(p, ncol(ptr->dat)) = ptr->dat;
+        p += ncol(ptr->dat);
     }
 
-    double dfe, sse;
-    std::vector<double> b;
-    lsfitc(y, x, zt, b, dfe, sse);
-
-    tbl.error.push_back(dfe);
-    tbl.error.push_back(sse);
-    tbl.error.push_back(sse / dfe);
-
-    for (auto &curr : tms_) {
-        size_t q0 = 1;
-        x.assign(n, 1);
-
-        for (auto &tm : tms_) {
-            if (&tm == &curr)
-                continue;
-            q0 += tm->dat.size();
-            for (auto &e : tm->dat)
-                x.insert(x.end(), e.begin(), e.end());
+    mat z = mat::Zero(q, p);
+    isize_t r = 0, c = 1;
+    for (auto &ptr : tms_) {
+        isize_t nr = nrow(ptr->constr);
+        isize_t nc = ncol(ptr->constr);
+        if (nr > 0) {
+            z.block(r, c, nr, nc) = ptr->constr;
+            r += nr;
+            c += nc;
         }
+        else
+            c += ncol(ptr->dat);
+    }
 
-        zt.clear();
-        pos = 1;
-        nz = 0;
-        for (auto &tm : tms_) {
-            if (&tm == &curr)
-                continue;
-            for (auto &e : tm->contr) {
-                std::vector<double> v(q0, 0);
-                std::copy(e.begin(), e.end(), v.begin() + pos);
-                zt.insert(zt.end(), v.begin(), v.end());
-                nz += 1;
+    LmFitEq lm;
+    lmfit_eq(n, p, q, y.data(), x.data(), z.data(), &lm);
+
+    tbl.error.push_back(lm.dfe);
+    tbl.error.push_back(lm.sse);
+    tbl.error.push_back(lm.sse / lm.dfe);
+
+    isize_t nterms = length(tms_);
+
+    if (nterms == 1) {
+        tbl.src.push_back(tms_[0]->name);
+        tbl.df.push_back(dft - lm.dfe);
+        tbl.ss.push_back(sst - lm.sse);
+    }
+    else {
+        for (isize_t i = 0; i < nterms; ++i) {
+            isize_t p0 = p - ncol(tms_[i]->dat);
+            mat x0(n, p0);
+
+            isize_t nleft = 1;
+            isize_t nright = 0;
+            for (isize_t j = 0; j < nterms; ++j) {
+                if (j < i)
+                    nleft += ncol(tms_[j]->dat);
+                else if (j > i)
+                    nright += ncol(tms_[j]->dat);
             }
-            pos += tm->dat.size();
+
+            x0.leftCols(nleft) = x.leftCols(nleft);
+            if (nright > 0)
+                x0.rightCols(nright) = x.rightCols(nright);
+
+            isize_t q0 = q - nrow(tms_[i]->constr);
+            mat z0 = mat::Zero(q0, p0);
+
+            r = 0, c = 1;
+            for (isize_t j = 0; j < nterms; ++j) {
+                if (j == i)
+                    continue;
+                isize_t nr = nrow(tms_[j]->constr);
+                isize_t nc = ncol(tms_[j]->constr);
+                if (nr > 0) {
+                    z0.block(r, c, nr, nc) = tms_[j]->constr;
+                    r += nr;
+                    c += nc;
+                }
+                else
+                    c += ncol(tms_[j]->dat);
+            }
+
+            LmFitEq lm0;
+            lmfit_eq(n, p0, q0, y.data(), x0.data(), z0.data(), &lm0);
+
+            tbl.src.push_back(tms_[i]->name);
+            tbl.df.push_back(lm0.dfe - lm.dfe);
+            tbl.ss.push_back(lm0.sse - lm.sse);
         }
-
-        double dfe0, sse0;
-        std::vector<double> b0;
-        lsfitc(y, x, zt, b0, dfe0, sse0);
-
-        tbl.src.push_back(curr->name);
-        tbl.df.push_back(dfe0 - dfe);
-        tbl.ss.push_back(sse0 - sse);
     }
 
-    auto m = tms_.size();
-    tbl.ms.resize(m);
-    tbl.f.resize(m);
-    tbl.p.assign(m, std::numeric_limits<double>::quiet_NaN());
-    for (size_t j = 0; j < m; ++j) {
+    tbl.ms.resize(nterms);
+    tbl.f.resize(nterms);
+    tbl.p.assign(nterms, std::numeric_limits<double>::quiet_NaN());
+    for (isize_t j = 0; j < nterms; ++j) {
         tbl.ms[j] = tbl.ss[j] / tbl.df[j];
         tbl.f[j] = tbl.ms[j] / tbl.error[2];
         if (tbl.df[j] > 0.0 && tbl.ss[j] > 0.0)
@@ -309,75 +337,132 @@ ANOVA::Table ANOVA::solve3(const std::vector<double> &y) const
 
 ANOVA::Solution ANOVA::solution(const std::vector<double> &y) const
 {
-    auto n = y.size();
+    isize_t n = length(y);
 
-    std::vector<double> x;
-    std::vector<std::string> par;
-
-    size_t p = 1;
-    x.assign(n, 1);
-    par.push_back("Constant");
-
-    for (auto &tm : tms_) {
-        par.insert(par.end(), tm->par.begin(), tm->par.end());
-        p += tm->dat.size();
-        for (auto &e : tm->dat)
-            x.insert(x.end(), e.begin(), e.end());
+    isize_t p = 1;
+    isize_t q = 0;
+    for (auto &ptr : tms_) {
+        p += ncol(ptr->dat);
+        q += nrow(ptr->constr);
     }
 
-    std::vector<double> zt;
-    int pos = 1, q = 0;
-    for (auto &tm : tms_) {
-        for (auto &e : tm->contr) {
-            std::vector<double> v(p, 0);
-            std::copy(e.begin(), e.end(), v.begin() + pos);
-            zt.insert(zt.end(), v.begin(), v.end());
-            q += 1;
+    mat x(n, p);
+    std::vector<std::string> param;
+
+    x.col(0).setOnes();
+    param.push_back("Constant");
+
+    p = 1;
+    for (auto &ptr : tms_) {
+        param.insert(param.end(), ptr->param.begin(), ptr->param.end());
+        x.middleCols(p, ncol(ptr->dat)) = ptr->dat;
+        p += ncol(ptr->dat);
+    }
+
+    mat z = mat::Zero(q, p);
+    isize_t r = 0, c = 1;
+    for (auto &ptr : tms_) {
+        isize_t nr = nrow(ptr->constr);
+        isize_t nc = ncol(ptr->constr);
+        if (nr > 0) {
+            z.block(r, c, nr, nc) = ptr->constr;
+            r += nr;
+            c += nc;
         }
-        pos += tm->dat.size();
+        else
+            c += ncol(ptr->dat);
     }
 
-    double dfe, sse;
-    std::vector<double> b;
-    lsfitc(y, x, zt, b, dfe, sse);
+    LmFitEq lm;
+    lmfit_eq(n, p, q, y.data(), x.data(), z.data(), &lm);
 
     Solution sol;
-    sol.par.swap(par);
-    sol.est.swap(b);
+    sol.par.swap(param);
+    sol.est = lm.b;
+
+    return sol;
+}
+
+ANOVA::Solution ANOVA::solution_wtsum(const std::vector<double> &y) const
+{
+    isize_t n = length(y);
+
+    isize_t p = 1;
+    isize_t q = 0;
+    for (auto &ptr : tms_) {
+        p += ncol(ptr->dat);
+        q += nrow(ptr->constr_wt);
+    }
+
+    mat x(n, p);
+    std::vector<std::string> param;
+
+    x.col(0).setOnes();
+    param.push_back("Constant");
+
+    p = 1;
+    for (auto &ptr : tms_) {
+        param.insert(param.end(), ptr->param.begin(), ptr->param.end());
+        x.middleCols(p, ncol(ptr->dat)) = ptr->dat;
+        p += ncol(ptr->dat);
+    }
+
+    mat z = mat::Zero(q, p);
+    isize_t r = 0, c = 1;
+    for (auto &ptr : tms_) {
+        isize_t nr = nrow(ptr->constr_wt);
+        isize_t nc = ncol(ptr->constr_wt);
+        if (nr > 0) {
+            z.block(r, c, nr, nc) = ptr->constr_wt;
+            r += nr;
+            c += nc;
+        }
+        else
+            c += ncol(ptr->dat);
+    }
+
+    LmFitEq lm;
+    lmfit_eq(n, p, q, y.data(), x.data(), z.data(), &lm);
+
+    Solution sol;
+    sol.par.swap(param);
+    sol.est = lm.b;
 
     return sol;
 }
 
 std::string ANOVA::Table::to_string() const
 {
-    std::ostringstream oss;
-    oss << "Source\tDF\tSS\tMS\tF\tp\n";
+    std::string s;
 
-    auto n = src.size();
-    for (size_t i = 0; i < n; ++i)
-        oss << src[i] << "\t" << df[i] << "\t" << ss[i] << "\t" << ms[i] << "\t" << f[i] << "\t" << p[i] << "\n";
+    s += "Source\tDF\tSS\tMS\tF\tp\n";
 
-    oss << "Error";
+    isize_t n = length(src);
+    for (isize_t i = 0; i < n; ++i)
+        s += sprint("%s\t%g\t%g\t%g\t%g\t%g\n", src[i], df[i], ss[i], ms[i], f[i], p[i]);
+
+    s += "Error";
     for (auto &e : error)
-        oss << "\t" << e;
-    oss << "\n";
+        s += sprint("\t%g", e);
+    s += '\n';
 
-    oss << "Total";
+    s += "Total";
     for (auto &e : total)
-        oss << "\t" << e;
-    oss << "\n";
+        s += sprint("\t%g", e);
+    s += '\n';
 
-    return oss.str();
+    return s;
 }
 
 std::string ANOVA::Solution::to_string() const
 {
-    std::ostringstream oss;
-    oss << "Parameter\tEstimate\n";
+    std::string s;
 
-    auto n = par.size();
-    for (size_t i = 0; i < n; ++i)
-        oss << par[i] << "\t" << est[i] << "\n";
+    s += "Parameter\tEstimate\n";
 
-    return oss.str();
+    isize_t n = length(par);
+    for (isize_t i = 0; i < n; ++i)
+        s += sprint("%s\t%g\n", par[i], est[i]);
+
+    return s;
 }

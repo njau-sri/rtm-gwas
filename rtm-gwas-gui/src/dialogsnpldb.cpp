@@ -1,110 +1,285 @@
-#include <QDir>
-#include <QDateTime>
-#include <QFileDialog>
 #include "dialogsnpldb.h"
-#include "ui_dialogsnpldb.h"
+
+#include <QLabel>
+#include <QSpinBox>
+#include <QCheckBox>
+#include <QDateTime>
+#include <QGroupBox>
+#include <QLineEdit>
+#include <QFileDialog>
+#include <QFormLayout>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QSpacerItem>
+#include <QVBoxLayout>
+#include <QButtonGroup>
+#include <QDoubleSpinBox>
+#include <QDialogButtonBox>
+
 #include "parameter.h"
 
-DialogSNPLDB::DialogSNPLDB(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::DialogSNPLDB)
+namespace {
+
+QString current_datetime_string()
 {
-    ui->setupUi(this);
-
-    ui->lineEditVCF->setText(Parameter::vcf);
-    ui->lineEditGene->setText(Parameter::gene);
-    ui->lineEditBlock->setText(Parameter::block);
-    ui->spinBoxOpenMP->setValue(Parameter::openmp);
-
-    connect(ui->buttonBox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(apply()));
+    return QDateTime::currentDateTime().toString("yyMMddhhmmsszzz");
 }
 
-DialogSNPLDB::~DialogSNPLDB()
+} // namespace
+
+DialogSNPLDB::DialogSNPLDB(QWidget *parent) : QDialog(parent)
 {
-    delete ui;
+    setWindowTitle("SNPLDB - RTM-GWAS");
+
+    setup_layout();
+    setup_group_box_data();
+    setup_group_box_option();
+    setup_button_box();
+
+    restore_defaults();
 }
 
-QString DialogSNPLDB::getProg() const
+QString DialogSNPLDB::program() const
 {
-    return QDir(Parameter::exe).filePath(QLatin1String("rtm-gwas-snpldb"));
+    return QDir(par->bin_path).absoluteFilePath("rtm-gwas-snpldb");
 }
 
-QStringList DialogSNPLDB::getArgs() const
+QStringList DialogSNPLDB::arguments() const
 {
     QStringList args;
 
-    if ( ! ui->lineEditVCF->text().isEmpty() )
-        args << QLatin1String("--vcf") << ui->lineEditVCF->text();
+    if (!vcf_->text().isEmpty())
+        args << "--vcf" << vcf_->text();
 
-    if ( ! ui->lineEditGene->text().isEmpty() )
-        args << QLatin1String("--gene") << ui->lineEditGene->text();
+    if (!gene_->text().isEmpty())
+        args << "--gene" << gene_->text();
 
-    if ( ! ui->lineEditFam->text().isEmpty() )
-        args << QLatin1String("--fam") << ui->lineEditFam->text();
+    if (!block_->text().isEmpty())
+        args << "--block" << block_->text();
 
-    if ( ! ui->lineEditBlock->text().isEmpty() )
-        args << QLatin1String("--block") << ui->lineEditBlock->text();
+    if (maf_->text().isEmpty())
+        args << "--maf" << maf_->text();
 
-    if ( ! ui->lineEditMaf->text().isEmpty() )
-        args << QLatin1String("--maf") << ui->lineEditMaf->text();
+    args << "--maxlen" << maxlen_->cleanText();
+    args << "--llim" << llim_->cleanText();
+    args << "--ulim" << ulim_->cleanText();
+    args << "--recomb" << recomb_->cleanText();
+    args << "--inform" << inform_->cleanText();
+    args << "--thread" << thread_->cleanText();
 
-    if ( ! ui->lineEditMaxlen->text().isEmpty() )
-        args << QLatin1String("--maxlen") << ui->lineEditMaxlen->text();
+    if (identity_->text().isEmpty())
+        args << "--identity" << identity_->text();
 
-    if ( ! ui->lineEditLlim->text().isEmpty() )
-        args << QLatin1String("--llim") << ui->lineEditLlim->text();
+    if (rilchk_->isChecked())
+        args << "--ril";
+    else if (namchk_->isChecked()) {
+        if (nam_->text().isEmpty())
+            args << "--nam";
+        else
+            args << "--nam" << nam_->text();
+    }
 
-    if ( ! ui->lineEditUlim->text().isEmpty() )
-        args << QLatin1String("--ulim") << ui->lineEditUlim->text();
-
-    if ( ! ui->lineEditRecomb->text().isEmpty() )
-        args << QLatin1String("--recomb") << ui->lineEditRecomb->text();
-
-    if ( ! ui->lineEditInform->text().isEmpty() )
-        args << QLatin1String("--inform") << ui->lineEditInform->text();
-
-    if (ui->spinBoxOpenMP->value() > 0)
-        args << QLatin1String("--thread") << ui->spinBoxOpenMP->text();
-
-    QString prefix = QLatin1String("snpldb.out.");
-    prefix += QDateTime::currentDateTime().toString(QLatin1String("yyMMdd_hhmmsszzz"));
-
-    args << QLatin1String("--out") << QDir(Parameter::work).absoluteFilePath(prefix);
+    QString prefix = out_->text();
+    if (prefix.isEmpty())
+        prefix = "snpldb.out." + current_datetime_string();
+    args << "--out" << QDir(par->working_directory).absoluteFilePath(prefix);
 
     return args;
 }
 
-void DialogSNPLDB::apply()
+void DialogSNPLDB::setup_layout()
 {
-    Parameter::vcf = ui->lineEditVCF->text();
-    Parameter::gene = ui->lineEditGene->text();
-    Parameter::block = ui->lineEditBlock->text();
-    Parameter::openmp = ui->spinBoxOpenMP->value();
+    setLayout(new QVBoxLayout);
 }
 
-void DialogSNPLDB::on_pushButtonVCF_clicked()
+void DialogSNPLDB::setup_group_box_data()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Choose VCF file"), Parameter::open);
-    if (!fileName.isEmpty()) {
-        ui->lineEditVCF->setText(fileName);
-        Parameter::open = QFileInfo(fileName).absolutePath();
+    QGroupBox *box = new QGroupBox("Data", this);
+    layout()->addWidget(box);
+
+    QGridLayout *grid = new QGridLayout;
+    box->setLayout(grid);
+
+    QLabel *vcfl = new QLabel("SNP genotype data:", box);
+    vcf_ = new QLineEdit(box);
+    vcf_->setPlaceholderText("required, VCF foramt");
+    QPushButton *vcfb = new QPushButton("Browse...", box);
+    grid->addWidget(vcfl, 0, 0);
+    grid->addWidget(vcf_, 0, 1);
+    grid->addWidget(vcfb, 0, 2);
+    connect(vcfb, SIGNAL(clicked()), this, SLOT(get_vcf()));
+
+    QLabel *genel = new QLabel("Gene coordinate:", box);
+    gene_ = new QLineEdit(box);
+    gene_->setPlaceholderText("optional");
+    QPushButton *geneb = new QPushButton("Browse...", box);
+    grid->addWidget(genel, 1, 0);
+    grid->addWidget(gene_, 1, 1);
+    grid->addWidget(geneb, 1, 2);
+    connect(geneb, SIGNAL(clicked()), this, SLOT(get_gene()));
+
+    QLabel *blockl = new QLabel("Reference haplotype block:", box);
+    block_ = new QLineEdit(box);
+    block_->setPlaceholderText("optional");
+    QPushButton *blockb = new QPushButton("Browse...", box);
+    grid->addWidget(blockl, 2, 0);
+    grid->addWidget(block_, 2, 1);
+    grid->addWidget(blockb, 2, 2);
+    connect(blockb, SIGNAL(clicked()), this, SLOT(get_block()));
+
+    QLabel *outl = new QLabel("Output file prefix:", box);
+    out_ = new QLineEdit(box);
+    out_->setPlaceholderText("required");
+    out_->setText("snpldb.out." + current_datetime_string());
+    grid->addWidget(outl, 3, 0);
+    grid->addWidget(out_, 3, 1);
+}
+
+void DialogSNPLDB::setup_group_box_option()
+{
+    QHBoxLayout *midlayout = new QHBoxLayout;
+
+    QGroupBox *box1 = new QGroupBox("Option", this);
+    midlayout->addWidget(box1);
+
+    QFormLayout *form = new QFormLayout;
+    box1->setLayout(form);
+
+    maf_ = new QLineEdit(box1);
+    maf_->setPlaceholderText("0.01");
+    maf_->setToolTip("value range [0, 0.5]");
+    form->addRow("Minimum haplotype frequency:", maf_);
+
+    maxlen_ = new QSpinBox(box1);
+    maxlen_->setRange(2, 99999999);
+    maxlen_->setSingleStep(10000);
+    form->addRow("Maximum block length:", maxlen_);
+
+    llim_ = new QSpinBox(box1);
+    llim_->setRange(0, 100);
+    form->addRow("Strong LD lower limit:", llim_);
+
+    ulim_ = new QSpinBox(box1);
+    ulim_->setRange(0, 100);
+    form->addRow("Strong LD upper limit:", ulim_);
+
+    recomb_ = new QSpinBox(box1);
+    recomb_->setRange(0, 100);
+    form->addRow("Strong recombination threshold:", recomb_);
+
+    inform_ = new QDoubleSpinBox(box1);
+    inform_->setRange(0.0, 1.0);
+    inform_->setSingleStep(0.01);
+    form->addRow("Informative strong LD threshold:", inform_);
+
+    thread_ = new QSpinBox(box1);
+    form->addRow("Number of threads:", thread_);
+
+    identity_ = new QLineEdit(box1);
+    identity_->setPlaceholderText("0");
+    identity_->setToolTip("value range [0, 1]");
+    form->addRow("Haplotype identity:", identity_);
+
+    QGroupBox *box2 = new QGroupBox("Population", this);
+    midlayout->addWidget(box2);
+
+    QVBoxLayout *vbox = new QVBoxLayout;
+    box2->setLayout(vbox);
+
+    natchk_ = new QCheckBox("Natural/Germplasm", box2);
+    rilchk_ = new QCheckBox("Recombinant inbred line (RIL)", box2);
+    namchk_ = new QCheckBox("Nested association mapping (NAM)", box2);
+
+    QButtonGroup *btngrp = new QButtonGroup(box2);
+    btngrp->addButton(natchk_);
+    btngrp->addButton(rilchk_);
+    btngrp->addButton(namchk_);
+    btngrp->setExclusive(true);
+
+    natchk_->setChecked(true);
+    nam_ = new QLineEdit(box2);
+    nam_->setPlaceholderText("family sample size, n1,n2,...");
+    nam_->setDisabled(true);
+
+    connect(namchk_, SIGNAL(stateChanged(int)), this, SLOT(set_nam_state(int)));
+
+    vbox->addWidget(natchk_);
+    vbox->addWidget(rilchk_);
+    vbox->addWidget(namchk_);
+    vbox->addWidget(nam_);
+
+    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    vbox->addItem(spacer);
+
+    static_cast<QVBoxLayout*>(layout())->addLayout(midlayout);
+}
+
+void DialogSNPLDB::setup_button_box()
+{
+    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    layout()->addItem(spacer);
+
+    QDialogButtonBox *btn = new QDialogButtonBox(this);
+    btn->setOrientation(Qt::Horizontal);
+    btn->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Reset);
+    layout()->addWidget(btn);
+
+    QPushButton *btn_reset = btn->button(QDialogButtonBox::Reset);
+
+    connect(btn, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(btn, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(btn_reset, SIGNAL(clicked()), this, SLOT(restore_defaults()));
+}
+
+void DialogSNPLDB::get_vcf()
+{
+    QString filename = QFileDialog::getOpenFileName(this, QString(), par->file_dialog_directory);
+    if (!filename.isEmpty()) {
+        vcf_->setText(filename);
+        par->file_dialog_directory = QFileInfo(filename).absolutePath();
     }
 }
 
-void DialogSNPLDB::on_pushButtonGene_clicked()
+void DialogSNPLDB::get_gene()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Choose gene file"), Parameter::open);
-    if (!fileName.isEmpty()) {
-        ui->lineEditGene->setText(fileName);
-        Parameter::open = QFileInfo(fileName).absolutePath();
+    QString filename = QFileDialog::getOpenFileName(this, QString(), par->file_dialog_directory);
+    if (!filename.isEmpty()) {
+        gene_->setText(filename);
+        par->file_dialog_directory = QFileInfo(filename).absolutePath();
     }
 }
 
-void DialogSNPLDB::on_pushButtonBlock_clicked()
+void DialogSNPLDB::get_block()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Choose block file"), Parameter::open);
-    if (!fileName.isEmpty()) {
-        ui->lineEditBlock->setText(fileName);
-        Parameter::open = QFileInfo(fileName).absolutePath();
+    QString filename = QFileDialog::getOpenFileName(this, QString(), par->file_dialog_directory);
+    if (!filename.isEmpty()) {
+        block_->setText(filename);
+        par->file_dialog_directory = QFileInfo(filename).absolutePath();
     }
+}
+
+void DialogSNPLDB::restore_defaults()
+{
+    vcf_->clear();
+    gene_->clear();
+    block_->clear();
+    out_->setText("snpldb.out." + current_datetime_string());
+    maf_->setText("0.01");
+    maxlen_->setValue(100000);
+    llim_->setValue(70);
+    ulim_->setValue(98);
+    recomb_->setValue(90);
+    inform_->setValue(0.95);
+    thread_->setValue(0);
+    identity_->setText("0");
+    natchk_->setChecked(true);
+    nam_->clear();
+}
+
+void DialogSNPLDB::set_nam_state(int state)
+{
+    if (state == Qt::Checked)
+        nam_->setEnabled(true);
+    else if (state == Qt::Unchecked)
+        nam_->setDisabled(true);
 }

@@ -1,68 +1,59 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMap>
 #include <QProcess>
 #include <QMainWindow>
-#include <QProgressBar>
+#include <QStringList>
 
-namespace Ui {
-class MainWindow;
-}
+class QLabel;
+class QListWidget;
+class QProgressBar;
+class QPlainTextEdit;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-
-    explicit MainWindow(QWidget *parent = 0);
-
-    ~MainWindow();
+    MainWindow(QWidget *parent = nullptr);
 
 protected:
-
     void closeEvent(QCloseEvent *e);
 
+private:
+    void setup_menu_file();
+    void setup_menu_analysis();
+    void setup_menu_help();
+    void setup_central_widget();
+    void steup_dock_widget();
+    void setup_status_bar();
+    void create_process();
+    void show_file_content(const QString &filename);
+    QStringList get_process_output_files() const;
+    bool is_process_running();
+    void start_process();
+
 private slots:
-
-    void on_actionChangeDir_triggered();
-
-    void on_actionSNPLDB_triggered();
-
-    void on_actionGSC_triggered();
-
-    void on_actionAssociation_triggered();
-
-    void on_actionContents_triggered();
-
-    void on_actionAbout_triggered();
-
-    void on_listWidgetFile_currentRowChanged(int currentRow);
-
-    void slot_proc_readyReadStandardOutput();
-
-    void slot_proc_finished(int code, QProcess::ExitStatus status);
+    void set_working_directory();
+    void show_working_directory();
+    void show_dialog_snpldb();
+    void show_dialog_gsc();
+    void show_dialog_assoc();
+    void show_help_content();
+    void show_dialog_about();
+    void on_wnd_list_currentRowChanged(int currentRow);
+    void read_process_stdout();
+    void on_process_finished(int code, QProcess::ExitStatus status);
 
 private:
-
-    void loadFiles(const QStringList &fileNames);
-
-    void showFile(const QString &fileName);
-
-    bool isProcessRunning();
-
-    QStringList getOutputFiles() const;
-
-    void startProcess(const QString &prog, const QStringList &args);
-
-private:
-
-    Ui::MainWindow *ui;
-    QProcess *proc_;
-    QProgressBar *bar_;
-    QStringList args_;
-    QMap<QString,QString> mapfile_;
+    QListWidget *wnd_list_;
+    QPlainTextEdit *wnd_file_;
+    QPlainTextEdit *wnd_log_;
+    QLabel *status_;
+    QProgressBar *progress_;
+    QProcess *process_;
+    QString program_;
+    QStringList arguments_;
 };
 
 #endif // MAINWINDOW_H

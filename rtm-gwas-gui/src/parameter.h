@@ -5,23 +5,14 @@
 
 struct Parameter
 {
-    static QString work;
-    static QString open;
-    static QString exe;
+    QString working_directory;
+    QString file_dialog_directory;
+    QString bin_path;
 
-    static QString vcf;
-    static QString pheno;
-    static QString covar;
-    static QString block;
-    static QString gene;
-    static QString grm;
-
-    static int txtsize;
-    static int logsize;
-
-    static int openmp;
-
-    static bool delete_onexit;
+    int txt_size;
+    int log_size;
 };
+
+extern Parameter *par;
 
 #endif // PARAMETER_H

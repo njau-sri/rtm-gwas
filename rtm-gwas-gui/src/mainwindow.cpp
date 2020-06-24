@@ -1,256 +1,345 @@
+#include "mainwindow.h"
+
 #include <QDir>
 #include <QUrl>
-#include <QTextCodec>
-#include <QFileInfo>
+#include <QMenu>
+#include <QLabel>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QDockWidget>
 #include <QFileDialog>
+#include <QListWidget>
 #include <QMessageBox>
+#include <QTextStream>
+#include <QApplication>
+#include <QProgressBar>
+#include <QPlainTextEdit>
 #include <QDesktopServices>
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+
 #include "parameter.h"
 #include "dialogsnpldb.h"
 #include "dialoggsc.h"
 #include "dialogassoc.h"
-#include "version.h"
 
+#ifndef RTM_GWAS_VERSION
+#define RTM_GWAS_VERSION "unknown"
+#endif // RTM_GWAS_VERSION
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    proc_(0), bar_(0)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    ui->setupUi(this);
+    setWindowTitle("RTM-GWAS");
 
-    ui->actionExit->setMenuRole(QAction::QuitRole);
-    ui->actionAbout->setMenuRole(QAction::AboutRole);
+    setup_menu_file();
+    setup_menu_analysis();
+    setup_menu_help();
 
-    ui->plainTextEditLog->setMaximumBlockCount(Parameter::logsize);
+    setup_central_widget();
+    steup_dock_widget();
+    setup_status_bar();
 
-    bar_ = new QProgressBar;
-    bar_->setTextVisible(false);
-    bar_->setMaximumHeight(statusBar()->height() / 2);
-    bar_->setMaximumWidth(150);
-    statusBar()->addPermanentWidget(bar_);
+    create_process();
 
-    proc_ = new QProcess(this);
-    proc_->setProcessChannelMode(QProcess::MergedChannels);
-    connect(proc_, SIGNAL(readyReadStandardOutput()), this, SLOT(slot_proc_readyReadStandardOutput()));
-    connect(proc_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(slot_proc_finished(int,QProcess::ExitStatus)));
-
-    statusBar()->showMessage(tr("Ready"));
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
+    status_->setText("Ready");
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
-    if ( isProcessRunning() ) {
+    if (is_process_running()) {
         e->ignore();
         return;
     }
-
-    if ( Parameter::delete_onexit ) {
-        foreach (const QString &name, mapfile_)
-            QFile::remove(name);
-    }
-
     e->accept();
 }
 
-void MainWindow::on_actionChangeDir_triggered()
+void MainWindow::setup_menu_file()
 {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("Change working directory"), Parameter::work);
-    if ( ! dir.isEmpty() ) {
-        Parameter::work = dir;
-        QDir::setCurrent(dir);
-    }
+    QMenu *file = menuBar()->addMenu("&File");
+    file->addAction("&Set Working Directory", this, SLOT(set_working_directory()));
+    file->addAction("Show &Working Directory", this, SLOT(show_working_directory()));
+    file->addSeparator();
+    QAction *act = file->addAction("E&xit", this, SLOT(close()), QKeySequence("Ctrl+Q"));
+    act->setMenuRole(QAction::QuitRole); // macOS
 }
 
-void MainWindow::on_actionSNPLDB_triggered()
+void MainWindow::setup_menu_analysis()
 {
-    DialogSNPLDB d(this);
-    if (d.exec() != QDialog::Accepted)
-        return;
-    startProcess(d.getProg(), d.getArgs());
+    QMenu *analysis = menuBar()->addMenu("A&nalysis");
+    analysis->addAction("&SNPLDB", this, SLOT(show_dialog_snpldb()));
+    analysis->addAction("&GSC", this, SLOT(show_dialog_gsc()));
+    analysis->addAction("&Association", this, SLOT(show_dialog_assoc()));
 }
 
-void MainWindow::on_actionGSC_triggered()
+void MainWindow::setup_menu_help()
 {
-    DialogGSC d(this);
-    if (d.exec() != QDialog::Accepted)
-        return;
-    startProcess(d.getProg(), d.getArgs());
+    QMenu *help = menuBar()->addMenu("&Help");
+    help->addAction("Con&tents", this, SLOT(show_help_content()), QKeySequence::HelpContents);
+    help->addSeparator();
+    QAction *act = help->addAction("A&bout", this, SLOT(show_dialog_about()));
+    act->setMenuRole(QAction::AboutRole); // macOS
 }
 
-void MainWindow::on_actionAssociation_triggered()
+void MainWindow::setup_central_widget()
 {
-    DialogAssoc d(this);
-    if (d.exec() != QDialog::Accepted)
-        return;
-    startProcess(d.getProg(), d.getArgs());
+    wnd_file_ = new QPlainTextEdit(this);
+    wnd_file_->setReadOnly(true);
+    setCentralWidget(wnd_file_);
 }
 
-void MainWindow::on_actionContents_triggered()
+void MainWindow::steup_dock_widget()
 {
-    QDir dir = QApplication::applicationDirPath();
-    QString fileName = dir.filePath(QLatin1String("RTM-GWAS_UserGuide.pdf"));
-    QString url = QLatin1String("https://github.com/njau-sri/rtm-gwas/wiki");
+    QDockWidget *dock_left = new QDockWidget("Result", this);
+    dock_left->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    wnd_list_ = new QListWidget(dock_left);
+    dock_left->setWidget(wnd_list_);
 
-    if ( ! QFile::exists(fileName) )
-        QDesktopServices::openUrl(QUrl(url));
-    else if ( ! QDesktopServices::openUrl(QUrl(QLatin1String("file:///") + fileName)) ) {
-        QMessageBox::critical(this, tr("ERROR"),
-            tr("Can't find suitable application to open: %1<br>"
-               "Please visit the wiki: <a href=%2>%2</a>").arg(fileName, url));
-        QDesktopServices::openUrl(QUrl(url));
-    }
+    QDockWidget *dock_bottom = new QDockWidget("Log", this);
+    dock_bottom->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    wnd_log_ = new QPlainTextEdit(dock_bottom);
+    wnd_log_->setReadOnly(true);
+    wnd_log_->setMaximumBlockCount(par->log_size);
+    wnd_log_->setStyleSheet("background-color: rgb(0,0,0); color: rgb(0,255,0);");
+    dock_bottom->setWidget(wnd_log_);
+
+    addDockWidget(Qt::LeftDockWidgetArea, dock_left);
+    addDockWidget(Qt::BottomDockWidgetArea, dock_bottom);
+
+    connect(wnd_list_, SIGNAL(currentRowChanged(int)), this, SLOT(on_wnd_list_currentRowChanged(int)));
 }
 
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::setup_status_bar()
 {
-    QMessageBox::about(this, tr("About RTM-GWAS"),
-        tr("<h3>RTM-GWAS " RTM_GWAS_VERSION "</h3><p>Built on %1 at %2</p><p><a href=%3>%3</a></p>").arg(
-            QLatin1String(__DATE__), QLatin1String(__TIME__),
-            QLatin1String("https://github.com/njau-sri/rtm-gwas")));
+    QStatusBar *sb = statusBar();
+
+    status_ = new QLabel;
+    sb->addWidget(status_);
+
+    progress_ = new QProgressBar;
+    progress_->setTextVisible(false);
+    progress_->setMaximumHeight(sb->height() * 3 / 4);
+    progress_->setMaximumWidth(200);
+    sb->addPermanentWidget(progress_);
 }
 
-void MainWindow::on_listWidgetFile_currentRowChanged(int currentRow)
+void MainWindow::create_process()
 {
-    if (currentRow >= 0 && currentRow < ui->listWidgetFile->count()) {
-        QString fileName = ui->listWidgetFile->item(currentRow)->text();
-        showFile(mapfile_.value(fileName));
-    }
-    else {
-        ui->plainTextEditData->clear();
-    }
+    process_ = new QProcess(this);
+
+    process_->setProcessChannelMode(QProcess::MergedChannels);
+
+    connect(process_, SIGNAL(readyReadStandardOutput()), this, SLOT(read_process_stdout()));
+
+    connect(process_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(on_process_finished(int,QProcess::ExitStatus)));
 }
 
-void MainWindow::slot_proc_readyReadStandardOutput()
+void MainWindow::show_file_content(const QString &filename)
 {
-    QByteArray v = proc_->readAllStandardOutput();
-    ui->plainTextEditLog->moveCursor(QTextCursor::End);
-    ui->plainTextEditLog->insertPlainText(QString::fromLocal8Bit(v.data(),v.size()));
-    ui->plainTextEditLog->moveCursor(QTextCursor::End);
-}
+    qint64 maxlen = par->txt_size * 1024 * 1024;
 
-void MainWindow::slot_proc_finished(int code, QProcess::ExitStatus status)
-{
-    statusBar()->clearMessage();
-    bar_->setRange(0,1);
-    bar_->reset();
-
-    if (status != QProcess::NormalExit || code != 0) {
-        foreach (const QString &name, getOutputFiles())
-            QFile::remove(name);
-        QMessageBox::critical(this, tr("ERROR"), tr("Process exited unexpectedly: code %1, status %2.").arg(code).arg(status));
-        return;
-    }
-
-    loadFiles(getOutputFiles());
-}
-
-void MainWindow::loadFiles(const QStringList &fileNames)
-{
-    foreach (const QString &name, fileNames) {
-        QFileInfo fi(name);
-        QFile file(name);
-        if (!mapfile_.contains(fi.fileName()) && file.open(QIODevice::ReadOnly)) {
-            mapfile_.insert(fi.fileName(),name);
-            ui->listWidgetFile->addItem(fi.fileName());
-        }
-    }
-    ui->listWidgetFile->setCurrentRow(ui->listWidgetFile->count() - 1);
-}
-
-void MainWindow::showFile(const QString &fileName)
-{
-    QString name = mapfile_.value(fileName, fileName);
-
-    QFile file(name);
-    if ( ! file.open(QIODevice::ReadOnly) ) {
-        QMessageBox::critical(this, tr("ERROR"), tr("Can't open file: %1").arg(name));
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, "Error - RTM-GWAS", "Can't open file: " + filename);
         return;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    qint64 maxlen = Parameter::txtsize * 1024 * 1024;
+    QTextStream in(&file);
+    QString text = in.read(maxlen);
 
-    QByteArray v = file.read(maxlen);
-
-    QTextCodec::ConverterState state;
-    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-    QString text = codec->toUnicode(v.data(), v.size(), &state);
-    if (state.invalidChars > 0)
-        text = QString::fromLocal8Bit(v);
-
-    ui->plainTextEditData->setPlainText(text);
-
-    if (v.size() < file.size())
-        ui->plainTextEditData->appendHtml(tr("<br>&lt;<i>Not entire contents of file being displayed</i>&gt;"));
+    wnd_file_->setPlainText(text);
+    if (text.size() < file.size())
+        wnd_file_->appendPlainText("\n*** Only part of the file is displayed");
 
     QApplication::restoreOverrideCursor();
 }
 
-bool MainWindow::isProcessRunning()
+QStringList MainWindow::get_process_output_files() const
 {
-    if (proc_->state() != QProcess::NotRunning) {
-        if (QMessageBox::question(this, tr("Terminate"), tr("Stop currently running computations?"), QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok)
-            return true;
+    QStringList out;
 
-        disconnect(proc_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(slot_proc_finished(int,QProcess::ExitStatus)));
-        proc_->close();
+    int pos = arguments_.indexOf("--out");
 
-        statusBar()->clearMessage();
-        bar_->setRange(0,1);
-        bar_->reset();
-
-        foreach (const QString &name, getOutputFiles())
-            QFile::remove(name);
-
-        connect(proc_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(slot_proc_finished(int,QProcess::ExitStatus)));
+    if (pos != -1 && (pos + 1) < arguments_.size()) {
+        QFileInfo fi(arguments_.at(pos + 1));
+        QDir dir = fi.absoluteDir();
+        dir.setNameFilters(QStringList(fi.fileName().append('*')));
+        QStringList filenames = dir.entryList(QDir::Files | QDir::NoSymLinks | QDir::CaseSensitive);
+        foreach (const QString &name, filenames)
+            out << dir.absoluteFilePath(name);
     }
+
+    return out;
+}
+
+bool MainWindow::is_process_running()
+{
+    if (process_->state() == QProcess::NotRunning)
+        return false;
+
+    QMessageBox::StandardButton ret =
+            QMessageBox::question(this, "Terminate - RTM-GWAS",
+                                  "Stop currently running computation?",
+                                  QMessageBox::Ok | QMessageBox::Cancel);
+    if (ret != QMessageBox::Ok)
+        return true;
+
+    disconnect(process_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(on_process_finished(int,QProcess::ExitStatus)));
+
+    process_->close();
+
+    status_->setText("Ready");
+    progress_->setRange(0, 1);
+    progress_->reset();
+
+    foreach (const QString &name, get_process_output_files())
+        QFile::remove(name);
+
+    connect(process_, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(on_process_finished(int,QProcess::ExitStatus)));
 
     return false;
 }
 
-QStringList MainWindow::getOutputFiles() const
+void MainWindow::start_process()
 {
-    QStringList output;
-
-    int pos = args_.indexOf(QLatin1String("--out"));
-    if (pos == -1)
-        return output;
-
-    QFileInfo fi(args_.at(pos+1));
-    QStringList filter(fi.fileName().append(QLatin1Char('*')));
-    QDir dir = fi.absoluteDir();
-    QStringList fileNames = dir.entryList(filter, QDir::Files | QDir::NoSymLinks | QDir::CaseSensitive);
-
-    foreach (const QString &name, fileNames)
-        output.append(dir.filePath(name));
-
-    return output;
-}
-
-void MainWindow::startProcess(const QString &prog, const QStringList &args)
-{
-    if ( isProcessRunning() )
+    if (is_process_running())
         return;
 
-    args_ = args;
-    proc_->setWorkingDirectory(Parameter::work);
+    QString msg = "Start Process - ";
+    msg.append(program_).append(' ').append(arguments_.join(" ")).append("\n\n");
+    wnd_log_->moveCursor(QTextCursor::End);
+    wnd_log_->appendPlainText(msg);
+    wnd_log_->moveCursor(QTextCursor::End);
 
-    proc_->start(prog, args);
-    if ( ! proc_->waitForStarted() ) {
-        QMessageBox::critical(this, tr("ERROR"), tr("Can't start process: %1").arg(prog));
+    process_->setWorkingDirectory(par->working_directory);
+    process_->start(program_, arguments_);
+
+    if (!process_->waitForStarted()) {
+        QMessageBox::critical(this, "Error - RTM-GWAS", "Can't start process: " + program_);
         return;
     }
 
-    statusBar()->showMessage(tr("Busy"));
-    bar_->setRange(0,0);
-    bar_->reset();
+    status_->setText("Computing...");
+    progress_->setRange(0, 0);
+    progress_->reset();
+}
+
+void MainWindow::set_working_directory()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, QString(), par->working_directory);
+    if (!dir.isEmpty()) {
+        par->working_directory = dir;
+        par->file_dialog_directory = dir;
+    }
+}
+
+void MainWindow::show_working_directory()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(par->working_directory));
+}
+
+void MainWindow::show_dialog_snpldb()
+{
+    DialogSNPLDB d(this);
+    d.resize(640, 480);
+    if (d.exec() == QDialog::Accepted) {
+        program_ = d.program();
+        arguments_ = d.arguments();
+        start_process();
+    }
+}
+
+void MainWindow::show_dialog_gsc()
+{
+    DialogGSC d(this);
+    d.resize(640, 480);
+    if (d.exec() == QDialog::Accepted) {
+        program_ = d.program();
+        arguments_ = d.arguments();
+        start_process();
+    }
+}
+
+void MainWindow::show_dialog_assoc()
+{
+    DialogAssoc d(this);
+    d.resize(640, 480);
+    if (d.exec() == QDialog::Accepted) {
+        program_ = d.program();
+        arguments_ = d.arguments();
+        start_process();
+    }
+}
+
+void MainWindow::show_help_content()
+{
+    QString pdf = "RTM-GWAS_UserGuide.pdf";
+    QString www = "https://github.com/njau-sri/rtm-gwas/wiki";
+
+    pdf = QDir(QApplication::applicationDirPath()).absoluteFilePath(pdf);
+    if (QFile::exists(pdf)) {
+        if (QDesktopServices::openUrl(QUrl::fromLocalFile(pdf)))
+            return;
+        QMessageBox::critical(this, "Error - RTM-GWAS", "Can't open " + pdf);
+    }
+
+    QDesktopServices::openUrl(QUrl(www));
+}
+
+void MainWindow::show_dialog_about()
+{
+    QString desc =
+            "<h3>RTM-GWAS %1</h3>"
+            "<p>Built on %2 %3</p>"
+            "<p>Home: <a href=%4>%4</a></p>"
+            "<p>Copyright (C) 2020 Nanjing Agricultural University</p>";
+
+    QMessageBox::about(this, "About RTM-GWAS",
+                       desc.arg(
+                           RTM_GWAS_VERSION,
+                           __DATE__,
+                           __TIME__,
+                           "https://github.com/njau-sri/rtm-gwas")
+                       );
+}
+
+void MainWindow::on_wnd_list_currentRowChanged(int currentRow)
+{
+    if (currentRow >= 0 && currentRow < wnd_list_->count()) {
+        QString filename = wnd_list_->item(currentRow)->toolTip();
+        show_file_content(filename);
+    }
+    else
+        wnd_file_->clear();
+}
+
+void MainWindow::read_process_stdout()
+{
+    QByteArray v = process_->readAllStandardOutput();
+    wnd_log_->moveCursor(QTextCursor::End);
+    wnd_log_->insertPlainText(QString::fromLocal8Bit(v.data(),v.size()));
+    wnd_log_->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::on_process_finished(int code, QProcess::ExitStatus status)
+{
+    status_->setText("Ready");
+    progress_->setRange(0, 1);
+    progress_->reset();
+
+    QStringList filenames = get_process_output_files();
+
+    if (status != QProcess::NormalExit || code != 0) {
+        foreach (const QString &name, filenames)
+            QFile::remove(name);
+        QString msg = "Process exited unexpectedly: code %1, status %2";
+        QMessageBox::critical(this, "Error - RTM-GWAS", msg.arg(code).arg(status));
+        return;
+    }
+
+    foreach (const QString &name, filenames) {
+        wnd_list_->addItem(QFileInfo(name).fileName());
+        wnd_list_->item(wnd_list_->count() - 1)->setToolTip(name);
+    }
+
+    wnd_list_->setCurrentRow(wnd_list_->count() - 1);
 }

@@ -1,33 +1,35 @@
 @echo off
 
-set /p my_target=Specify Target Platform [win32/win64]:
+set /p MyTarget=Specify Target Platform [win32/win64]:
 
 rem Distributable Code for Visual Studio 2019
 rem https://docs.microsoft.com/en-us/visualstudio/releases/2019/redistribution#visual-c-runtime-files
 set "VisualStudioFolder=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community"
-set "RedistVersion=14.25.28508"
+set "RedistVersion=14.26.28720"
 
-set my_vcvar_bat=
+set MyVcVarBat=
 
-if /i "%my_target%" == "win32" (
+if /i "%MyTarget%" == "win32" (
     rmdir /s /q Release rtm-gwas-assoc-win32
-    set "my_vcvar_bat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars32.bat"
-    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x86\Microsoft.VC142.OPENMP\vcomp140.dll"
+    set "MyVcVarBat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars32.bat"
+    set "MyVcOmpDll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x86\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
 
-if /i "%my_target%" == "win64" (
+if /i "%MyTarget%" == "win64" (
     rmdir /s /q x64 rtm-gwas-assoc-win64
-    set "my_vcvar_bat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars64.bat"
-    set "my_vcomp_dll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x64\Microsoft.VC142.OPENMP\vcomp140.dll"
+    set "MyVcVarBat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars64.bat"
+    set "MyVcOmpDll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x64\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
 
-if "%my_vcvar_bat%" == "" (
-    echo ERROR: invalid target platform: %my_target%
+if "%MyVcVarBat%" == "" (
+    echo ERROR: invalid target platform: %MyTarget%
     pause
     exit /b 1
 )
 
-call "%my_vcvar_bat%"
+call "%MyVcVarBat%"
+
+for /f "delims=" %%x in (../VERSION) do set RTM_GWAS_VERSION=%%x
 
 MSBuild.exe -m -p:Configuration=Release
 
@@ -36,22 +38,22 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if "%my_target%" == "win32" (
+if "%MyTarget%" == "win32" (
     mkdir rtm-gwas-assoc-win32
-    copy "%my_vcomp_dll%" rtm-gwas-assoc-win32\
+    copy "%MyVcOmpDll%" rtm-gwas-assoc-win32\
     copy Release\rtm-gwas-assoc.exe rtm-gwas-assoc-win32\
 )
 
-if "%my_target%" == "win64" (
+if "%MyTarget%" == "win64" (
     mkdir rtm-gwas-assoc-win64
-    copy "%my_vcomp_dll%" rtm-gwas-assoc-win64\
+    copy "%MyVcOmpDll%" rtm-gwas-assoc-win64\
     copy x64\Release\rtm-gwas-assoc.exe rtm-gwas-assoc-win64\
 )
 
 pause
 
-set my_target=
-set my_vcvar_bat=
-set my_vcomp_dll=
+set MyTarget=
+set MyVcVarBat=
+set MyVcOmpDll=
 set RedistVersion=
 set VisualStudioFolder=

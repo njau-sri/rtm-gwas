@@ -1,6 +1,0 @@
-#ifndef RTM_GWAS_VERSION_H
-#define RTM_GWAS_VERSION_H
-
-#define RTM_GWAS_VERSION  "2019.5.dev"
-
-#endif // RTM_GWAS_VERSION_H
