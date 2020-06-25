@@ -6,8 +6,8 @@
 
 ## Help
 
-https://github.com/njau-sri/rtm-gwas/wiki
+https://gitee.com/njau-sri/rtm-gwas/wikis/pages
 
 ## Download
 
-https://github.com/njau-sri/rtm-gwas/releases
+https://gitee.com/njau-sri/rtm-gwas/releases
