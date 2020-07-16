@@ -17,9 +17,11 @@
 #include <QDesktopServices>
 
 #include "parameter.h"
+#include "dialoggconv.h"
 #include "dialogsnpldb.h"
 #include "dialoggsc.h"
 #include "dialogassoc.h"
+#include "dialogld.h"
 
 #ifndef RTM_GWAS_VERSION
 #define RTM_GWAS_VERSION "unknown"
@@ -31,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     setup_menu_file();
     setup_menu_analysis();
+    setup_menu_tools();
     setup_menu_help();
 
     setup_central_widget();
@@ -54,6 +57,8 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::setup_menu_file()
 {
     QMenu *file = menuBar()->addMenu("&File");
+    file->addAction("Genotype Format Conversion", this, SLOT(show_dialog_gconv()));
+    file->addSeparator();
     file->addAction("&Set Working Directory", this, SLOT(set_working_directory()));
     file->addAction("Show &Working Directory", this, SLOT(show_working_directory()));
     file->addSeparator();
@@ -67,6 +72,12 @@ void MainWindow::setup_menu_analysis()
     analysis->addAction("&SNPLDB", this, SLOT(show_dialog_snpldb()));
     analysis->addAction("&GSC", this, SLOT(show_dialog_gsc()));
     analysis->addAction("&Association", this, SLOT(show_dialog_assoc()));
+}
+
+void MainWindow::setup_menu_tools()
+{
+    QMenu *tools = menuBar()->addMenu("&Tools");
+    tools->addAction("&Linkage Disequilibrium", this, SLOT(show_dialog_ld()));
 }
 
 void MainWindow::setup_menu_help()
@@ -223,6 +234,17 @@ void MainWindow::start_process()
     progress_->reset();
 }
 
+void MainWindow::show_dialog_gconv()
+{
+    DialogGConv d(this);
+    d.resize(640, 200);
+    if (d.exec() == QDialog::Accepted) {
+        program_ = d.program();
+        arguments_ = d.arguments();
+        start_process();
+    }
+}
+
 void MainWindow::set_working_directory()
 {
     QString dir = QFileDialog::getExistingDirectory(this, QString(), par->working_directory);
@@ -270,10 +292,21 @@ void MainWindow::show_dialog_assoc()
     }
 }
 
+void MainWindow::show_dialog_ld()
+{
+    DialogLD d(this);
+    d.resize(640, 300);
+    if (d.exec() == QDialog::Accepted) {
+        program_ = d.program();
+        arguments_ = d.arguments();
+        start_process();
+    }
+}
+
 void MainWindow::show_help_content()
 {
     QString pdf = "RTM-GWAS_UserGuide.pdf";
-    QString www = "https://github.com/njau-sri/rtm-gwas/wiki";
+    QString www = "https://gitee.com/njau-sri/rtm-gwas/wikis/pages";
 
     pdf = QDir(QApplication::applicationDirPath()).absoluteFilePath(pdf);
     if (QFile::exists(pdf)) {
@@ -298,7 +331,7 @@ void MainWindow::show_dialog_about()
                            RTM_GWAS_VERSION,
                            __DATE__,
                            __TIME__,
-                           "https://github.com/njau-sri/rtm-gwas")
+                           "https://gitee.com/njau-sri/rtm-gwas")
                        );
 }
 

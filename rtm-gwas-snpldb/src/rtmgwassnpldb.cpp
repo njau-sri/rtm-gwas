@@ -24,9 +24,11 @@ namespace {
         std::string gene;
         std::string out;
         std::string nam;
+        double tol = 1e-5;
         double maf = 0.01;
         double identity = 0.0;
         double inform = 0.95;
+        int maxit = 1000;
         int maxlen = 100000;
         int llim = 70;
         int ulim = 98;
@@ -51,6 +53,8 @@ namespace {
             "  --ulim <98>         upper limit CI for string LD [0,100]\n"
             "  --recomb <90>       upper limit CI for strong recombination [0,100]\n"
             "  --inform <0.95>     minimum fraction of informative strong LD [0,1]\n"
+            "  --maxit <1000>      maximum number of iterations in haplotype inference\n"
+            "  --tol <1e-5>        accuracy in haplotype inference\n"
             "  --nam <>            NAM population mode, specify the number of lines\n"
             "                      in each family, n1,n2,n3,...\n"
             "  --ril               RIL population mode, the first two individuals\n"
@@ -60,7 +64,7 @@ namespace {
         eprint(help);
     }
 
-    void parse_cmdline(int argc, char *argv[])
+    int parse_cmdline(int argc, char *argv[])
     {
         CmdLine cmd;
 
@@ -78,8 +82,11 @@ namespace {
         cmd.add("--nam", "");
         cmd.add("--ril");
         cmd.add("--thread", "0");
+        cmd.add("--maxit", "1000");
+        cmd.add("--tol", "1e-5");
 
-        cmd.parse(argc, argv);
+        if (cmd.parse(argc, argv) != 0)
+            return 1;
 
         par.vcf = cmd.get("--vcf");
         par.block = cmd.get("--block");
@@ -99,6 +106,25 @@ namespace {
         par.ril = cmd.has("--ril");
 
         par.thread = std::stoi(cmd.get("--thread"));
+
+        par.tol = std::stod(cmd.get("--tol"));
+        par.maxit = std::stoi(cmd.get("--maxit"));
+
+        return 0;
+    }
+
+    int check_biallelic_snp(const Genotype &gt)
+    {
+        for (auto &v : gt.allele) {
+            if (v.size() > 2)
+                return 1;
+            for (auto &e : v) {
+                if (e.size() != 1)
+                    return 2;
+            }
+        }
+
+        return 0;
     }
 
     int read_block(const std::string &filename, std::vector<std::string> &chrom,
@@ -298,22 +324,24 @@ namespace {
     }
 
     // AA:0, Aa:1, aa:2, missing:-1
-    void recode_snp_012(const Genotype &gt, const std::vector<isize_t> &sidx,
+    void recode_snp_012(isize_t firstind, const Genotype &gt, const std::vector<isize_t> &sidx,
                         std::vector<int> &pos, std::vector< std::vector<int8_t> > &dat)
     {
         isize_t n = length(gt.ind);
         isize_t m = length(sidx);
+        isize_t nn = n - firstind;
 
         pos.resize(m);
-        dat.assign(m, std::vector<int8_t>(n, -1));
+        dat.assign(m, std::vector<int8_t>(nn, -1));
 
         if (gt.ploidy == 2) {
             for (isize_t j = 0; j < m; ++j) {
                 isize_t jj = sidx[j];
                 pos[j] = gt.pos[jj];
-                for (isize_t i = 0; i < n; ++i) {
-                    auto a = gt.dat[jj][i*2];
-                    auto b = gt.dat[jj][i*2+1];
+                for (isize_t i = 0; i < nn; ++i) {
+                    isize_t ii = i + firstind;
+                    auto a = gt.dat[jj][ii*2];
+                    auto b = gt.dat[jj][ii*2+1];
                     if (a == 1) {
                         if (b == 1)
                             dat[j][i] = 0;
@@ -333,8 +361,9 @@ namespace {
             for (isize_t j = 0; j < m; ++j) {
                 isize_t jj = sidx[j];
                 pos[j] = gt.pos[jj];
-                for (isize_t i = 0; i < n; ++i) {
-                    auto a = gt.dat[jj][i];
+                for (isize_t i = 0; i < nn; ++i) {
+                    isize_t ii = i + firstind;
+                    auto a = gt.dat[jj][ii];
                     if (a == 1)
                         dat[j][i] = 0;
                     else if (a == 2)
@@ -344,7 +373,8 @@ namespace {
         }
     }
 
-    int define_block(const Genotype &gt, std::vector<std::string> &chrom, std::vector<int> &start, std::vector<int> &stop)
+    int define_block(isize_t firstind, const Genotype &gt, std::vector<std::string> &chrom,
+                     std::vector<int> &start, std::vector<int> &stop)
     {
         HapBlockGabriel hb;
         hb.par.thread = par.thread;
@@ -353,6 +383,8 @@ namespace {
         hb.par.ulim = par.ulim;
         hb.par.recomb = par.recomb;
         hb.par.frac = par.inform;
+        hb.par.maxit = par.maxit;
+        hb.par.tol = par.tol;
 
         auto chrid = stable_unique(gt.chr);
         auto sidx = index_loc(gt, chrid);
@@ -367,7 +399,7 @@ namespace {
 
             std::vector<int> pos;
             std::vector< std::vector<int8_t> > dat;
-            recode_snp_012(gt, sidx[i], pos, dat);
+            recode_snp_012(firstind, gt, sidx[i], pos, dat);
 
             if (find_hapblock_gabriel(pos, dat, &hb) != 0)
                 return 1;
@@ -393,6 +425,8 @@ namespace {
         hb.par.ulim = par.ulim;
         hb.par.recomb = par.recomb;
         hb.par.frac = par.inform;
+        hb.par.maxit = par.maxit;
+        hb.par.tol = par.tol;
 
         if (gstart.empty()) {
             if (find_hapblock_gabriel(pos, dat, &hb) != 0)
@@ -458,8 +492,8 @@ namespace {
         return 0;
     }
 
-    int define_igr_block(const Genotype &gt, std::vector<std::string> &name, std::vector<std::string> &chrom,
-                         std::vector<int> &start, std::vector<int> &stop)
+    int define_igr_block(isize_t firstind, const Genotype &gt, std::vector<std::string> &name,
+                         std::vector<std::string> &chrom, std::vector<int> &start, std::vector<int> &stop)
     {
         isize_t g = length(name);
 
@@ -484,7 +518,7 @@ namespace {
 
             std::vector<int> pos;
             std::vector< std::vector<int8_t> > dat;
-            recode_snp_012(gt, idx[i], pos, dat);
+            recode_snp_012(firstind, gt, idx[i], pos, dat);
 
             std::vector< std::pair<int, int> > block;
             int info = define_igr_block_chr(pos, dat, gstart, gstop, block);
@@ -550,18 +584,6 @@ namespace {
         }
     }
 
-    int rtm_gwas_snpldb_ril(Genotype &gt)
-    {
-        eprint("ERROR: function not implemented\n");
-        return 1;
-    }
-
-    int rtm_gwas_snpldb_nam(Genotype &gt)
-    {
-        eprint("ERROR: function not implemented\n");
-        return 1;
-    }
-
 } // namespace
 
 int rtm_gwas_snpldb(int argc, char *argv[])
@@ -573,10 +595,18 @@ int rtm_gwas_snpldb(int argc, char *argv[])
         return 1;
     }
 
-    parse_cmdline(argc, argv);
+    if (parse_cmdline(argc, argv) != 0)
+        return 1;
 
     if (par.thread > 0)
         call_omp_set_num_threads(par.thread);
+
+    bool ril_pop = par.ril;
+    bool nam_pop = !par.nam.empty();
+    if (ril_pop && nam_pop) {
+        eprint("ERROR: invalid population type: RIL & NAM\n");
+        return 1;
+    }
 
     // load genotype
 
@@ -591,11 +621,54 @@ int rtm_gwas_snpldb(int argc, char *argv[])
         return 1;
     }
 
-    if (par.ril)
-        return rtm_gwas_snpldb_ril(gt);
+    if (check_biallelic_snp(gt) != 0) {
+        eprint("ERROR: requires SNP genotype data\n");
+        return 1;
+    }
 
-    if (!par.nam.empty())
-        return rtm_gwas_snpldb_nam(gt);
+    // RIL, NAM
+
+    isize_t firstind = 0;
+    isize_t tnam = 0;
+    std::vector<isize_t> nam;
+
+    if (nam_pop) {
+        for (auto &e : split(par.nam, " \t,")) {
+            int n = std::stoi(e);
+            if (n < 1) {
+                eprint("ERROR: invalid NAM family size: %s\n", e);
+                return 1;
+            }
+            nam.push_back(n);
+            tnam += n;
+        }
+
+        if (length(nam) < 2) {
+            eprint("ERROR: requires at least two families in NAM: %td\n", length(nam));
+            return 1;
+        }
+
+        eprint("INFO: %td families specified for NAM\n", length(nam));
+
+        firstind = length(nam) + 1;
+
+        if (length(gt.ind) != firstind + tnam) {
+            eprint("ERROR: inconsistent number of individuals: %td %td\n", length(gt.ind), firstind + tnam);
+            return 1;
+        }
+
+        if (length(gt.ind) < length(nam)*2 + 1) {
+            eprint("ERROR: requires at least %td individuals for NAM\n", length(nam)*2 + 1);
+            return 1;
+        }
+    }
+    else if (ril_pop) {
+        firstind = 2;
+        if (length(gt.ind) < 3) {
+            eprint("ERROR: requires at least three individuals for RIL: %td\n", length(gt.ind));
+            return 1;
+        }
+    }
 
     // define block
 
@@ -617,13 +690,13 @@ int rtm_gwas_snpldb(int argc, char *argv[])
             return 1;
         }
 
-        info = define_igr_block(gt, bname, bchr, bstart, bstop);
+        info = define_igr_block(firstind, gt, bname, bchr, bstart, bstop);
 
         if (info != 0)
             return 1;
     }
     else if (!par.block.empty()) {
-        eprint("INFO: reading predefined block file...\n");
+        eprint("INFO: reading reference haplotype block file...\n");
 
         int info = read_block(par.block, bchr, bstart, bstop);
 
@@ -633,7 +706,7 @@ int rtm_gwas_snpldb(int argc, char *argv[])
         eprint("INFO: %td blocks\n", length(bstart));
     }
     else {
-        int info = define_block(gt, bchr, bstart, bstop);
+        int info = define_block(firstind, gt, bchr, bstart, bstop);
 
         if (info != 0)
             return 1;
@@ -667,7 +740,7 @@ int rtm_gwas_snpldb(int argc, char *argv[])
     std::vector<int> bsize(nb, 0);
     std::vector<int> bfilter(nb, 0);
 
-    Genotype snpldb;
+    Genotype pgt, igt;
 
     CFile file(par.out + ".block", "w");
 
@@ -682,7 +755,8 @@ int rtm_gwas_snpldb(int argc, char *argv[])
     isize_t nsingle = 0;
 
     for (isize_t i = 0; i < nchr; ++i) {
-        Genotype bgt;
+        Genotype bpgt, bigt;
+        std::vector<int> bstart_snp;
         for (isize_t k = 0; k < nb; ++k) {
             if (bchr[k] != chrid[i])
                 continue;
@@ -707,7 +781,17 @@ int rtm_gwas_snpldb(int argc, char *argv[])
                 continue;
             }
 
-            form_haplotype(gt, idx, &ht);
+            int info = 0;
+
+            if (ril_pop)
+                info = form_haplotype_ril(gt, idx, &ht);
+            else if (nam_pop)
+                info = form_haplotype_nam(gt, idx, nam, &ht);
+            else
+                info = form_haplotype(gt, idx, &ht);
+
+            if (info != 0)
+                return 1;
 
             int amax = * std::max_element(ht.dat.begin(), ht.dat.end());
             if (amax > std::numeric_limits<allele_t>::max()) {
@@ -721,35 +805,50 @@ int rtm_gwas_snpldb(int argc, char *argv[])
             fprint(file, "%s\t%s\t%d\t%d\t%d\t%d\t%d\n", bname[k], ht.chr, bstart[k], bstop[k],
                    bstop[k] - bstart[k] + 1, ht.size, ht.filter);
 
-            bgt.loc.push_back(bname[k]);
-            bgt.chr.push_back(ht.chr);
-            bgt.pos.push_back(bstart[k]);
+            bigt.loc.push_back(bname[k]);
+            bigt.chr.push_back(ht.chr);
+            bigt.pos.push_back(bstart[k]);
+            bstart_snp.push_back(ht.start);
 
-            bgt.dat.emplace_back(ht.dat.size());
-            std::transform(ht.dat.begin(), ht.dat.end(), bgt.dat.back().begin(),
+            bigt.dat.emplace_back(ht.dat.size());
+            std::transform(ht.dat.begin(), ht.dat.end(), bigt.dat.back().begin(),
                            [](int a) { return static_cast<allele_t>(a); });
 
-            bgt.allele.push_back(ht.hap);
+            bigt.allele.push_back(ht.hap);
+
+            if (ril_pop || nam_pop) {
+                bpgt.dat.emplace_back(ht.pdat.size());
+                std::transform(ht.pdat.begin(), ht.pdat.end(), bpgt.dat.back().begin(),
+                               [](int a) { return static_cast<allele_t>(a); });
+            }
         }
 
         for (auto j : sidx[i]) {
             if (inblock[j]) {
-                isize_t k = index(bgt.pos, gt.pos[j]);
+                isize_t k = index(bstart_snp, gt.pos[j]);
                 if (k != -1) {
-                    snpldb.loc.push_back(bgt.loc[k]);
-                    snpldb.chr.push_back(bgt.chr[k]);
-                    snpldb.pos.push_back(bgt.pos[k]);
-                    snpldb.dat.push_back(bgt.dat[k]);
-                    snpldb.allele.push_back(bgt.allele[k]);
-
+                    igt.loc.push_back(bigt.loc[k]);
+                    igt.chr.push_back(bigt.chr[k]);
+                    igt.pos.push_back(bigt.pos[k]);
+                    igt.dat.push_back(bigt.dat[k]);
+                    igt.allele.push_back(bigt.allele[k]);
+                    if (ril_pop || nam_pop)
+                        pgt.dat.push_back(bpgt.dat[k]);
                 }
             }
             else {
-                snpldb.loc.push_back(gt.loc[j]);
-                snpldb.chr.push_back(gt.chr[j]);
-                snpldb.pos.push_back(gt.pos[j]);
-                snpldb.dat.push_back(gt.dat[j]);
-                snpldb.allele.push_back(gt.allele[j]);
+                igt.loc.push_back(gt.loc[j]);
+                igt.chr.push_back(gt.chr[j]);
+                igt.pos.push_back(gt.pos[j]);
+                igt.allele.push_back(gt.allele[j]);
+                if (ril_pop || nam_pop) {
+                    isize_t skip = gt.ploidy == 2 ? firstind * 2 : firstind;
+                    auto itr = gt.dat[j].begin() + skip;
+                    pgt.dat.emplace_back(gt.dat[j].begin(), itr);
+                    igt.dat.emplace_back(itr, gt.dat[j].end());
+                }
+                else
+                    igt.dat.push_back(gt.dat[j]);
             }
         }
     }
@@ -760,17 +859,31 @@ int rtm_gwas_snpldb(int argc, char *argv[])
     if (nsingle > 0)
         eprint("WARNING: skipped %td blocks with only one SNP\n", nsingle);
 
-    snpldb.ind = gt.ind;
-    snpldb.ploidy = gt.ploidy;
+    if (ril_pop || nam_pop) {
+        auto itr = gt.ind.begin() + firstind;
+        pgt.ind.assign(gt.ind.begin(), itr);
+        igt.ind.assign(itr, gt.ind.end());
+    }
+    else
+        igt.ind = gt.ind;
 
-    auto allele = snpldb.allele;
+    igt.ploidy = gt.ploidy;
+
+    auto allele = igt.allele;
     recode_haplotype(allele);
-    write_block_allele(snpldb, allele);
+    write_block_allele(igt, allele);
 
-    snpldb.allele.swap(allele);
+    igt.allele.swap(allele);
 
-    if (write_vcf(snpldb, par.out + ".vcf") != 0)
+    if (write_vcf(igt, par.out + ".vcf") != 0)
         return 1;
+
+    if (ril_pop || nam_pop) {
+        igt.ind = pgt.ind;
+        igt.dat = pgt.dat;
+        if (write_vcf(igt, par.out + ".parent.vcf") != 0)
+            return 1;
+    }
 
     eprint("INFO: SNPLDB has finished successfully\n");
 

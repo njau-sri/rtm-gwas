@@ -38,4 +38,4 @@ sdk header
 
 https://brew.sh/
 
-    brew install llvm libomp boost eigen qt
+    brew install llvm@9 libomp boost eigen qt

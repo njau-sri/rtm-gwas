@@ -440,7 +440,6 @@ namespace {
 
             auto i = itr - ps.begin();
             auto ii = out->in[i];
-            out->ps[ii] = *itr;
             out->in.erase(out->in.begin() + i);
 
             eprint("INFO: elimination %d: %td, P = %g\n", ++step, ii+1, *itr);

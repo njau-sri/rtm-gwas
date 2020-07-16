@@ -20,13 +20,15 @@ if [[ $1 != lnx64 && $1 != macos && $1 != win32 && $1 != win64 ]]; then
 fi
 
 if [[ $1 = macos ]]; then
-    export PATH="/usr/local/opt/llvm/bin:$PATH"
+    export PATH="/usr/local/opt/llvm@9/bin:$PATH"
     export PATH="/usr/local/opt/qt/bin:$PATH"
 fi
 
+make -C rtm-gwas-gconv -f Makefile.deploy $1 || exit 1
 make -C rtm-gwas-snpldb -f Makefile.deploy $1 || exit 1
 make -C rtm-gwas-gsc -f Makefile.deploy $1 || exit 1
 make -C rtm-gwas-assoc -f Makefile.deploy $1 || exit 1
+make -C rtm-gwas-ld -f Makefile.deploy $1 || exit 1
 
 cd rtm-gwas-gui
 if [[ $1 = lnx64 ]]; then
@@ -52,9 +54,11 @@ rm -rf $PKG
 mkdir $PKG
 
 if [[ $1 = lnx64 || $1 = macos ]]; then
+    mv -v rtm-gwas-gconv/rtm-gwas-gconv $PKG
     mv -v rtm-gwas-snpldb/rtm-gwas-snpldb $PKG
     mv -v rtm-gwas-gsc/rtm-gwas-gsc $PKG
     mv -v rtm-gwas-assoc/rtm-gwas-assoc $PKG
+    mv -v rtm-gwas-ld/rtm-gwas-ld $PKG
     if [[ $1 = lnx64 ]]; then
         mv -v rtm-gwas-gui/rtm-gwas-gui $PKG
         cp -v rtm-gwas-gui/qt-runtime-linux.txt $PKG
@@ -63,9 +67,11 @@ if [[ $1 = lnx64 || $1 = macos ]]; then
     fi
     tar zcf $PKG.tar.gz $PKG
 else
+    mv -v rtm-gwas-gconv/rtm-gwas-gconv.exe $PKG
     mv -v rtm-gwas-snpldb/rtm-gwas-snpldb.exe $PKG
     mv -v rtm-gwas-gsc/rtm-gwas-gsc.exe $PKG
     mv -v rtm-gwas-assoc/rtm-gwas-assoc.exe $PKG
+    mv -v rtm-gwas-ld/rtm-gwas-ld.exe $PKG
     mv -v rtm-gwas-gui/release/rtm-gwas-gui.exe $PKG
     zip -q -r $PKG.zip $PKG
 fi

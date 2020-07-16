@@ -7,15 +7,17 @@
 
 namespace {
 
-    double calc_identity(const std::vector<allele_t> &x, const std::vector<allele_t> &y)
+    isize_t calc_identity(const std::vector<allele_t> &x, const std::vector<allele_t> &y)
     {
-        isize_t n = length(x);
         isize_t s = 0;
+
+        isize_t n = length(x);
         for (isize_t i = 0; i < n; ++i) {
             if (x[i] && y[i] && x[i] == y[i])
                 ++s;
         }
-        return (double) s / n;
+
+        return s;
     }
 
     std::string hapstr(const std::vector<std::vector<std::string> > &allele,
@@ -90,8 +92,10 @@ int form_haplotype(const Genotype &gt, const std::vector<isize_t> &sidx, Haploty
     }
 
     const auto& par = out->par;
-    bool filter_maf = par.maf > 0.0 && par.maf < 1.0;
-    bool filter_identity = par.identity > 0.0 && par.identity < 1.0;
+
+    isize_t identity = 0;
+    if (par.identity > 0.0 && par.identity < 1.0)
+        identity = (isize_t) std::ceil(m * par.identity);
 
     // TODO: improve filtering
 
@@ -104,9 +108,9 @@ int form_haplotype(const Genotype &gt, const std::vector<isize_t> &sidx, Haploty
     subset(freq, ord).swap(freq);
 
     isize_t na = nh;
-    if (filter_maf) {
-        isize_t mac = (isize_t) std::ceil(par.maf * nn);
-        na = std::count_if(freq.begin(), freq.end(), [mac](isize_t e) { return e >= mac; });
+    if (par.maf > 0.0 && par.maf < 1.0) {
+        isize_t maf = (isize_t) std::ceil(nn * par.maf);
+        na = std::count_if(freq.begin(), freq.end(), [maf](isize_t e) { return e >= maf; });
     }
     if (na == 1)
         na = 2;
@@ -115,12 +119,12 @@ int form_haplotype(const Genotype &gt, const std::vector<isize_t> &sidx, Haploty
     std::iota(codec.begin(), codec.end(), 1);
 
     for (isize_t i = na; i < nh; ++i) {
-        std::vector<double> sc(na);
+        std::vector<isize_t> sc(na);
         for (isize_t j = 0; j < na; ++j)
             sc[j] = calc_identity(hap[j], hap[i]);
         isize_t k = index_max(sc);
         codec[i] = codec[k];
-        if (filter_identity && sc[k] < par.identity)
+        if (sc[k] < identity)
             codec[i] = 0;
         out->filter += (int) freq[i];
     }
@@ -161,7 +165,7 @@ int form_haplotype_ril(const Genotype &gt, const std::vector<isize_t> &sidx, Hap
     out->size = m;
     out->filter = 0;
     out->dat.assign(nn, 0);
-    out->pdat.assign(2, 0);
+    out->pdat.assign(diploid ? 4 : 2, 0);
     out->hap.clear();
 
     // NOTE: assuming parents are homozygous
@@ -185,7 +189,10 @@ int form_haplotype_ril(const Genotype &gt, const std::vector<isize_t> &sidx, Hap
     }
 
     const auto& par = out->par;
-    bool filter_identity = par.identity > 0.0 && par.identity < 1.0;
+
+    isize_t identity = 0;
+    if (par.identity > 0.0 && par.identity < 1.0)
+        identity = (isize_t) std::ceil(m * par.identity);
 
     std::vector<allele_t> g;
     g.reserve(m);
@@ -202,18 +209,22 @@ int form_haplotype_ril(const Genotype &gt, const std::vector<isize_t> &sidx, Hap
         else if (g == p2)
             out->dat[i] = 2;
         else {
-            double s1 = calc_identity(g, p1);
-            double s2 = calc_identity(g, p2);
-            int a = s1 > s2 ? 1 : 2;
-            if (filter_identity && ((a == 1 && s1 < par.identity) || (a == 2 && s2 < par.identity)))
-                a = 0;
+            isize_t s1 = calc_identity(g, p1);
+            isize_t s2 = calc_identity(g, p2);
+            int a = s1 < identity || s2 < identity ? 0 : (s1 >= s2 ? 1 : 2);
             out->dat[i] = a;
             out->filter += 1;
         }
     }
 
-    out->pdat[0] = 1;
-    out->pdat[1] = 2;
+    if (diploid) {
+        out->pdat[0] = out->pdat[1] = 1;
+        out->pdat[2] = out->pdat[3] = 2;
+    }
+    else {
+        out->pdat[0] = 1;
+        out->pdat[1] = 2;
+    }
 
     out->hap.push_back( hapstr(gt.allele, sidx, p1) );
     out->hap.push_back( hapstr(gt.allele, sidx, p2) );
@@ -259,11 +270,8 @@ int form_haplotype_nam(const Genotype &gt, const std::vector<isize_t> &sidx, con
     out->size = m;
     out->filter = 0;
     out->dat.assign(nn, 0);
-    out->pdat.assign(f+1, 0);
+    out->pdat.assign(diploid ? (f+1)*2 : f+1, 0);
     out->hap.clear();
-
-    const auto& par = out->par;
-    bool filter_identity = par.identity > 0.0 && par.identity < 1.0;
 
     // NOTE: assuming parents are homozygous
 
@@ -283,13 +291,25 @@ int form_haplotype_nam(const Genotype &gt, const std::vector<isize_t> &sidx, con
         }
     }
 
+    const auto& par = out->par;
+
+    isize_t identity = 0;
+    if (par.identity > 0.0 && par.identity < 1.0)
+        identity = (isize_t) std::ceil(m * par.identity);
+
     auto hap = stable_unique(pdat);
 
     std::vector<int> codec;
     for (auto &e : pdat)
         codec.push_back((int) index(hap, e) + 1);
 
-    out->pdat = codec;
+    if (diploid) {
+        isize_t lc = length(codec);
+        for (isize_t i = 0; i < lc; ++i)
+            out->pdat[i*2] = out->pdat[i*2+1] = codec[i];
+    }
+    else
+        out->pdat = codec;
 
     std::vector<allele_t> g;
     g.reserve(m);
@@ -315,11 +335,9 @@ int form_haplotype_nam(const Genotype &gt, const std::vector<isize_t> &sidx, con
             else if (g == p2)
                 out->dat[i1] = codec[k+1];
             else {
-                double s1 = calc_identity(g, p1);
-                double s2 = calc_identity(g, p2);
-                int a = s1 > s2 ? 1 : 2;
-                if (filter_identity && ((a == 1 && s1 < par.identity) || (a == 2 && s2 < par.identity)))
-                    a = 0;
+                isize_t s1 = calc_identity(g, p1);
+                isize_t s2 = calc_identity(g, p2);
+                int a = s1 < identity || s2 < identity ? 0 : (s1 >= s2 ? 1 : 2);
                 out->dat[i1] = a != 2 ? a : codec[k+1];
                 out->filter += 1;
             }

@@ -35,6 +35,7 @@ struct VcfEntry
     std::vector<allele_t> gt;
     int pos = 0;
     int ploidy = 0;
+    bool phased = false;
 };
 
 struct Genotype
@@ -46,6 +47,7 @@ struct Genotype
     std::vector< std::vector<allele_t> > dat;
     std::vector< std::vector<std::string> > allele;
     int ploidy = 0;
+    bool phased = false;
     enum class Source { UNKNOWN, VCF, PED, HAPMAP, GENO, SNPLDB };
     Source source = Source::UNKNOWN;
 };

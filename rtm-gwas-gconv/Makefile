@@ -1,0 +1,18 @@
+TARGET := rtm-gwas-gconv
+
+RTM_GWAS_VERSION ?= $(shell cat ../VERSION)
+DEFINES := -DRTM_GWAS_VERSION=\"$(RTM_GWAS_VERSION)\"
+
+CXX := g++
+
+CXXFLAGS := -O2 -std=c++11 -Wall -DNDEBUG $(DEFINES)
+LDFLAGS  := -s
+
+OBJ := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
+
+$(TARGET): $(OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $^
+
+.PHONY: clean
+clean:
+	$(RM) $(OBJ) $(TARGET)

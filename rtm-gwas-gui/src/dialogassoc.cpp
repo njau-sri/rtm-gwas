@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QGroupBox>
 #include <QLineEdit>
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -68,6 +69,9 @@ QStringList DialogAssoc::arguments() const
         args << "--mtc" << mtc_->currentText();
 
     args << "--thread" << thread_->cleanText();
+
+    if (nogxe_->isChecked())
+        args << "--no-gxe";
 
     QString prefix = out_->text();
     if (prefix.isEmpty())
@@ -154,6 +158,9 @@ void DialogAssoc::setup_group_box_option()
 
     thread_ = new QSpinBox(box);
     form->addRow("Number of threads:", thread_);
+
+    nogxe_ = new QCheckBox("Genotype-environment interaction", box);
+    form->addRow("", nogxe_);
 }
 
 void DialogAssoc::setup_button_box()
@@ -211,4 +218,5 @@ void DialogAssoc::restore_defaults()
     rsq_->setText("0.95");
     mtc_->setCurrentIndex(0);
     thread_->setValue(0);
+    nogxe_->setChecked(false);
 }

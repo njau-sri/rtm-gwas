@@ -10,13 +10,13 @@ set "RedistVersion=14.26.28720"
 set MyVcVarBat=
 
 if /i "%MyTarget%" == "win32" (
-    rmdir /s /q Release rtm-gwas-assoc-win32
+    rmdir /s /q Release
     set "MyVcVarBat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars32.bat"
     set "MyVcOmpDll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x86\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
 
 if /i "%MyTarget%" == "win64" (
-    rmdir /s /q x64 rtm-gwas-assoc-win64
+    rmdir /s /q x64
     set "MyVcVarBat=%VisualStudioFolder%\VC\Auxiliary\Build\vcvars64.bat"
     set "MyVcOmpDll=%VisualStudioFolder%\VC\Redist\MSVC\%RedistVersion%\x64\Microsoft.VC142.OPENMP\vcomp140.dll"
 )
@@ -39,15 +39,15 @@ if errorlevel 1 (
 )
 
 if "%MyTarget%" == "win32" (
-    mkdir rtm-gwas-assoc-win32
-    copy "%MyVcOmpDll%" rtm-gwas-assoc-win32\
-    copy Release\rtm-gwas-assoc.exe rtm-gwas-assoc-win32\
+    mkdir Release\bin
+    copy "%MyVcOmpDll%" Release\bin\
+    copy Release\rtm-gwas-assoc.exe Release\bin\
 )
 
 if "%MyTarget%" == "win64" (
-    mkdir rtm-gwas-assoc-win64
-    copy "%MyVcOmpDll%" rtm-gwas-assoc-win64\
-    copy x64\Release\rtm-gwas-assoc.exe rtm-gwas-assoc-win64\
+    mkdir x64\Release\bin
+    copy "%MyVcOmpDll%" x64\Release\bin
+    copy x64\Release\rtm-gwas-assoc.exe x64\Release\bin
 )
 
 pause

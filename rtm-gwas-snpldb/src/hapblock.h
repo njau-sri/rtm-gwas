@@ -7,7 +7,7 @@ struct HapBlockGabriel
 {
     struct Parameter
     {
-        double tol = 1e-10;
+        double tol = 1e-5;
         double frac = 0.95;
         int maxlen = 100000;
         int llim = 70;

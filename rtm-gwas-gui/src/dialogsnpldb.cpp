@@ -57,7 +57,7 @@ QStringList DialogSNPLDB::arguments() const
     if (!block_->text().isEmpty())
         args << "--block" << block_->text();
 
-    if (maf_->text().isEmpty())
+    if (!maf_->text().isEmpty())
         args << "--maf" << maf_->text();
 
     args << "--maxlen" << maxlen_->cleanText();
@@ -67,7 +67,7 @@ QStringList DialogSNPLDB::arguments() const
     args << "--inform" << inform_->cleanText();
     args << "--thread" << thread_->cleanText();
 
-    if (identity_->text().isEmpty())
+    if (!identity_->text().isEmpty())
         args << "--identity" << identity_->text();
 
     if (rilchk_->isChecked())

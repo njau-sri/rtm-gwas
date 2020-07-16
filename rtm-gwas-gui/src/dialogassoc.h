@@ -5,6 +5,7 @@
 #include <QStringList>
 
 class QSpinBox;
+class QCheckBox;
 class QComboBox;
 class QLineEdit;
 
@@ -39,6 +40,7 @@ private:
     QLineEdit *rsq_;
     QComboBox *mtc_;
     QSpinBox *thread_;
+    QCheckBox *nogxe_;
 };
 
 #endif // DIALOGASSOC_H

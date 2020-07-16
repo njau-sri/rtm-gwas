@@ -4,18 +4,22 @@
 #include <cstdio>
 #include <string>
 
-template<typename T>
-inline T argument(T a) { return a; }
+namespace internal {
 
-template<typename T>
-inline const T* argument(const std::basic_string<T> &a) { return a.c_str(); }
+    template<typename T>
+    inline T argument(T a) { return a; }
+
+    template<typename T>
+    inline const T* argument(const std::basic_string<T> &a) { return a.c_str(); }
+
+} // internal
 
 // stdout
 
 template<typename ... Ts>
 inline void print(const char *format, const Ts& ... args)
 {
-    std::fprintf(stdout, format, argument(args) ...);
+    std::fprintf(stdout, format, internal::argument(args) ...);
 }
 
 inline void print(const char *str)
@@ -28,7 +32,7 @@ inline void print(const char *str)
 template<typename ... Ts>
 inline void eprint(const char *format, const Ts& ... args)
 {
-    std::fprintf(stderr, format, argument(args) ...);
+    std::fprintf(stderr, format, internal::argument(args) ...);
 }
 
 inline void eprint(const char *str)
@@ -41,7 +45,7 @@ inline void eprint(const char *str)
 template<typename ... Ts>
 inline void fprint(std::FILE *stream, const char *format, const Ts& ... args)
 {
-    std::fprintf(stream, format, argument(args) ...);
+    std::fprintf(stream, format, internal::argument(args) ...);
 }
 
 inline void fprint(std::FILE *stream, const char *str)
@@ -56,11 +60,11 @@ inline std::string sprint(const char *format, const Ts& ... args)
 {
     std::string s;
 
-    int n = std::snprintf(nullptr, 0, format, argument(args) ...);
+    int n = std::snprintf(nullptr, 0, format, internal::argument(args) ...);
 
     if (n > 0) {
         s.resize(n);
-        std::snprintf(&s[0], n+1, format, argument(args) ...);
+        std::snprintf(&s[0], n+1, format, internal::argument(args) ...);
     }
 
     return s;

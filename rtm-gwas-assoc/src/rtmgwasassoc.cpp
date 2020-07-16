@@ -61,7 +61,7 @@ namespace {
         eprint(help);
     }
 
-    void parse_cmdline(int argc, char *argv[])
+    int parse_cmdline(int argc, char *argv[])
     {
         CmdLine cmd;
 
@@ -78,7 +78,8 @@ namespace {
         cmd.add("--thread", "0");
         cmd.add("--no-gxe");
 
-        cmd.parse(argc, argv);
+        if (cmd.parse(argc, argv) != 0)
+            return 1;
 
         par.vcf = cmd.get("--vcf");
         par.pheno = cmd.get("--pheno");
@@ -103,6 +104,8 @@ namespace {
             else
                 eprint("WARNING: invalid multiple testing correction: %s\n", mtc);
         }
+
+        return 0;
     }
 
     void fit_multi_locus_model(isize_t t, const std::vector<isize_t> &loc,
@@ -303,7 +306,8 @@ int rtm_gwas_assoc(int argc, char *argv[])
         return 1;
     }
 
-    parse_cmdline(argc, argv);
+    if (parse_cmdline(argc, argv) != 0)
+        return 1;
 
     if (par.thread > 0)
         call_omp_set_num_threads(par.thread);

@@ -12,14 +12,14 @@ public:
 
     void add(const std::string &arg, const std::string &val);
 
-    void parse(int argc, char *argv[]);
+    int parse(int argc, char *argv[]);
 
     bool has(const std::string &arg) const;
 
     std::string get(const std::string &arg) const;
 
 private:
-    void take(const std::string &key, const std::string &val);
+    int take(const std::string &key, const std::string &val);
 
 private:
     std::map<std::string, std::string> arg_;

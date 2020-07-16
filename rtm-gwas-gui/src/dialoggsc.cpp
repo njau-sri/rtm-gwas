@@ -49,7 +49,7 @@ QStringList DialogGSC::arguments() const
         args << "--vcf" << vcf_->text();
 
     if (!grm_->text().isEmpty())
-        args << "--gene" << grm_->text();
+        args << "--grm" << grm_->text();
 
     args << "--top" << top_->cleanText();
     args << "--thread" << thread_->cleanText();

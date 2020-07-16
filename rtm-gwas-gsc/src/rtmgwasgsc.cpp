@@ -38,7 +38,7 @@ namespace {
         eprint(help);
     }
 
-    void parse_cmdline(int argc, char *argv[])
+    int parse_cmdline(int argc, char *argv[])
     {
         CmdLine cmd;
 
@@ -48,13 +48,16 @@ namespace {
         cmd.add("--grm", "");
         cmd.add("--thread", "0");
 
-        cmd.parse(argc, argv);
+        if (cmd.parse(argc, argv) != 0)
+            return 1;
 
         par.vcf = cmd.get("--vcf");
         par.grm = cmd.get("--grm");
         par.out = cmd.get("--out");
         par.top = std::stoi(cmd.get("--top"));
         par.thread = std::stoi(cmd.get("--thread"));
+
+        return 0;
     }
 
     std::pair<isize_t, isize_t> count_shared_hap(isize_t n, const int *x, const int *y)
@@ -314,7 +317,8 @@ int rtm_gwas_gsc(int argc, char *argv[])
         return 1;
     }
 
-    parse_cmdline(argc, argv);
+    if (parse_cmdline(argc, argv) != 0)
+        return 1;
 
     if (par.thread > 0)
         call_omp_set_num_threads(par.thread);

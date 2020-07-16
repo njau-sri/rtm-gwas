@@ -12,6 +12,8 @@ DEFINES += "RTM_GWAS_VERSION=\\\"$$RTM_GWAS_VERSION\\\""
 SOURCES += \
     src/dialogassoc.cpp \
     src/dialoggsc.cpp \
+    src/dialoggconv.cpp \
+    src/dialogld.cpp \
     src/dialogsnpldb.cpp \
     src/main.cpp \
     src/mainwindow.cpp
@@ -19,6 +21,8 @@ SOURCES += \
 HEADERS += \
     src/dialogassoc.h \
     src/dialoggsc.h \
+    src/dialoggconv.h \
+    src/dialogld.h \
     src/dialogsnpldb.h \
     src/mainwindow.h \
     src/parameter.h

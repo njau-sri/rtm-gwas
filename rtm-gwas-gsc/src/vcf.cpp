@@ -176,8 +176,11 @@ int parse_vcf_entry(const std::string &s, VcfEntry &entry)
             return 1;
         }
 
-        if (i == 9)
+        if (i == 9) {
             entry.ploidy = info;
+            if (entry.ploidy == 2)
+                entry.phased = v[i].str().find('|') != std::string::npos;
+        }
 
         if (info != entry.ploidy) {
             eprint("ERROR: genotype ploidy doesn't match (%d != %d): %s\n", entry.ploidy, info, v[i].str());
@@ -227,15 +230,22 @@ int read_vcf(const std::string &filename, Genotype &gt)
         if (parse_vcf_entry(line, entry) != 0)
             return 1;
 
-        if (gt.ploidy != 1 && gt.ploidy != 2)
+        if (gt.ploidy == 0) {
             gt.ploidy = entry.ploidy;
+            gt.phased = entry.phased;
+        }
 
         if (entry.ploidy > gt.ploidy) {
             eprint("ERROR: genotype ploidy doesn't match at line %td\n", ln);
             return 1;
         }
 
-        if (entry.ploidy < gt.ploidy) {
+        if (entry.phased != gt.phased) {
+            eprint("ERROR: genotype phase doesn't match at line %td\n", ln);
+            return 1;
+        }
+
+        if (entry.ploidy == 1 && gt.ploidy == 2) {
             std::vector<allele_t> v;
             v.reserve(length(entry.gt) * 2);
             for (auto a : entry.gt) {
@@ -300,15 +310,22 @@ int read_vcf_gz(const std::string &filename, Genotype &gt)
         if (parse_vcf_entry(line, entry) != 0)
             return 1;
 
-        if (gt.ploidy != 1 && gt.ploidy != 2)
+        if (gt.ploidy == 0) {
             gt.ploidy = entry.ploidy;
+            gt.phased = entry.phased;
+        }
 
         if (entry.ploidy > gt.ploidy) {
             eprint("ERROR: genotype ploidy doesn't match at line %td\n", ln);
             return 1;
         }
 
-        if (entry.ploidy < gt.ploidy) {
+        if (entry.phased != gt.phased) {
+            eprint("ERROR: genotype phase doesn't match at line %td\n", ln);
+            return 1;
+        }
+
+        if (entry.ploidy == 1 && gt.ploidy == 2) {
             std::vector<allele_t> v;
             v.reserve(length(entry.gt) * 2);
             for (auto a : entry.gt) {
@@ -371,6 +388,7 @@ int write_vcf(const Genotype &gt, const std::string &filename, bool force_diploi
     std::string line;
     isize_t m = length(gt.loc);
     bool haploid = gt.ploidy != 2;
+    std::string sep = gt.phased ? "|" : "/";
 
     for (isize_t j = 0; j < m; ++j) {
         fprint(file, "%s\t%d\t%s\t", gt.chr[j], gt.pos[j], gt.loc[j]);
@@ -404,13 +422,13 @@ int write_vcf(const Genotype &gt, const std::string &filename, bool force_diploi
                 auto a = gt.dat[j][i];
                 line.append("\t").append(codes[a]);
                 if (force_diploid)
-                    line.append("/").append(codes[a]);
+                    line.append(sep).append(codes[a]);
             }
         }
         else {
             for (isize_t i = 0; i < n; ++i) {
                 auto a = gt.dat[j][i*2], b = gt.dat[j][i*2+1];
-                line.append("\t").append(codes[a]).append("/").append(codes[b]);
+                line.append("\t").append(codes[a]).append(sep).append(codes[b]);
             }
         }
 
@@ -452,6 +470,7 @@ int write_vcf_gz(const Genotype &gt, const std::string &filename, bool force_dip
     std::string line;
     isize_t m = length(gt.loc);
     bool haploid = gt.ploidy != 2;
+    std::string sep = gt.phased ? "|" : "/";
 
     for (isize_t j = 0; j < m; ++j) {
         gzprintf(file, "%s\t%d\t%s\t", gt.chr[j].c_str(), gt.pos[j], gt.loc[j].c_str());
@@ -489,13 +508,13 @@ int write_vcf_gz(const Genotype &gt, const std::string &filename, bool force_dip
                 auto a = gt.dat[j][i];
                 line.append("\t").append(codes[a]);
                 if (force_diploid)
-                    line.append("/").append(codes[a]);
+                    line.append(sep).append(codes[a]);
             }
         }
         else {
             for (isize_t i = 0; i < n; ++i) {
                 auto a = gt.dat[j][i*2], b = gt.dat[j][i*2+1];
-                line.append("\t").append(codes[a]).append("/").append(codes[b]);
+                line.append("\t").append(codes[a]).append(sep).append(codes[b]);
             }
         }
 
